@@ -32,7 +32,12 @@ create table products (
 );
 
 -- INVENTORY LOGS
-create type transaction_type as enum ('STOCK_IN', 'STOCK_OUT', 'MOVE', 'AUDIT', 'ADJUST');
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'transaction_type') THEN 
+        CREATE TYPE transaction_type AS ENUM ('STOCK_IN', 'STOCK_OUT', 'MOVE', 'AUDIT', 'ADJUST');
+    END IF;
+END $$;
 
 create table inventory_logs (
   id uuid default uuid_generate_v4() primary key,
@@ -49,3 +54,11 @@ create table inventory_logs (
 create index idx_products_barcode on products(barcode);
 create index idx_products_shelf on products(shelf_id);
 create index idx_logs_product on inventory_logs(product_id);
+
+-- SETTINGS
+create table settings (
+  id uuid default uuid_generate_v4() primary key,
+  key text not null unique,
+  value text not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);

@@ -225,3 +225,71 @@ export async function getProductsByShelf(shelfId: string) {
 
     return (data as Product[]) || []
 }
+export async function getSettings() {
+    const { data, error } = await supabase
+        .from('settings')
+        .select('key, value')
+
+    if (error) {
+        console.error('Error fetching settings:', error)
+        return []
+    }
+    return data
+}
+
+export async function updateSettings(key: string, value: string) {
+    const { error } = await supabase
+        .from('settings')
+        .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' })
+
+    if (error) throw new Error(error.message)
+    revalidatePath('/settings')
+    return { success: true }
+}
+
+export async function fetchTrendyolProducts() {
+    // 1. Get credentials from settings
+    const settings = await getSettings()
+    const sellerId = settings.find(s => s.key === 'trendyol_seller_id')?.value
+    const apiKey = settings.find(s => s.key === 'trendyol_api_key')?.value
+    const apiSecret = settings.find(s => s.key === 'trendyol_api_secret')?.value
+
+    if (!sellerId || !apiKey || !apiSecret) {
+        return { error: 'Trendyol API bilgileri eksik. Ayarlar sayfasından doldurun.' }
+    }
+
+    // 2. Prepare auth header (Basic Auth: apiKey:apiSecret)
+    const auth = Buffer.from(`${apiKey}:${apiSecret}`).toString('base64')
+
+    try {
+        const response = await fetch(`https://api.trendyol.com/integration/product/sellers/${sellerId}/products`, {
+            headers: {
+                'Authorization': `Basic ${auth}`,
+                'User-Agent': `${sellerId} - SelfIntegration`
+            }
+        })
+
+        const contentType = response.headers.get('content-type')
+
+        if (!response.ok) {
+            if (contentType && contentType.includes('application/json')) {
+                const errorData = await response.json()
+                throw new Error(errorData.message || `Trendyol Hatası (${response.status})`)
+            } else {
+                const text = await response.text()
+                console.error('Trendyol HTML Error:', text)
+                throw new Error(`Trendyol API bir hata sayfası döndürdü (HTTP ${response.status}). Bilgilerinizi kontrol edin.`)
+            }
+        }
+
+        if (contentType && contentType.includes('application/json')) {
+            const data = await response.json()
+            return { success: true, products: data.content || [] }
+        } else {
+            throw new Error('Trendyol API geçersiz bir yanıt döndürdü (JSON bekleniyordu).')
+        }
+    } catch (error: any) {
+        console.error('Trendyol fetch error:', error)
+        return { error: error.message || 'Trendyol ürünleri çekilemedi.' }
+    }
+}

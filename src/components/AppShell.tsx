@@ -7,7 +7,6 @@ import {
     LayoutDashboard,
     PackagePlus,
     PackageMinus,
-    List,
     Settings,
     Menu,
     X,
@@ -15,7 +14,10 @@ import {
     ScanLine,
     PlusCircle,
     LibrarySquare,
-    Warehouse
+    Warehouse,
+    ShoppingBag,
+    ArrowDownLeft,
+    ArrowUpRight
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -29,13 +31,13 @@ export default function AppShell({ children }: AppShellProps) {
 
     const navigation = [
         { name: 'Genel Bakış', href: '/', icon: LayoutDashboard },
-        { name: 'Stok Giriş', href: '/stock-in', icon: PackagePlus },
-        { name: 'Stok Çıkış', href: '/stock-out', icon: PackageMinus },
+        { name: 'Stok Giriş', href: '/stock-in', icon: ArrowDownLeft },
+        { name: 'Stok Çıkış', href: '/stock-out', icon: ArrowUpRight },
+        { name: 'Envanter', href: '/inventory', icon: Package },
+        { name: 'Raflar', href: '/shelves', icon: LibrarySquare },
+        { name: 'Trendyol', href: '/trendyol', icon: ShoppingBag },
         { name: 'Hızlı Kontrol', href: '/audit', icon: ScanLine },
         { name: 'Ürün Ekle', href: '/products/new', icon: PlusCircle },
-        { name: 'Stok Listesi', href: '/inventory', icon: List },
-        { name: 'Raf Ekle', href: '/shelves/new', icon: LibrarySquare },
-        { name: 'Raflar', href: '/shelves', icon: Package },
         { name: 'Ayarlar', href: '/settings', icon: Settings },
     ]
 
