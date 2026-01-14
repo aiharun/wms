@@ -1,14 +1,18 @@
-import { PackagePlus, PackageMinus, ScanLine, AlertTriangle, History, ArrowUpRight, ArrowDownLeft, TrendingUp, Package, ChevronRight, MapPin } from 'lucide-react'
+import { PackagePlus, PackageMinus, ScanLine, AlertTriangle, History, ArrowUpRight, ArrowDownLeft, TrendingUp, Package, ChevronRight, MapPin, ShoppingBag } from 'lucide-react'
 import Link from 'next/link'
-import { getRecentLogs, getLowStockProducts } from '@/lib/actions'
+import { getRecentLogs, getLowStockProducts, fetchTrendyolProducts } from '@/lib/actions'
 
 export const dynamic = 'force-dynamic'
 
 export default async function Home() {
-  const [logs, lowStockProducts] = await Promise.all([
+  const [logs, lowStockProducts, trendyolData] = await Promise.all([
     getRecentLogs(),
-    getLowStockProducts()
+    getLowStockProducts(),
+    fetchTrendyolProducts()
   ])
+
+  const trendyolProducts = trendyolData.products || []
+  const criticalTrendyol = trendyolProducts.filter((p: any) => p.onSale && p.quantity <= 5)
 
   return (
     <div className="space-y-8">
@@ -65,60 +69,114 @@ export default async function Home() {
         </Link>
       </div>
 
-      {/* Critical Stock Alert - Only show if there are low stock items */}
-      {lowStockProducts.length > 0 && (
-        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl overflow-hidden">
-          <div className="p-5 border-b border-amber-200 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center">
-                <AlertTriangle className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h3 className="font-bold text-amber-900">Kritik Stok Uyarısı</h3>
-                <p className="text-sm text-amber-700">{lowStockProducts.length} ürün minimum stok seviyesinde veya altında</p>
-              </div>
-            </div>
-            <Link
-              href="/inventory"
-              className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-medium rounded-lg transition-colors"
-            >
-              Tümünü Gör
-            </Link>
-          </div>
-
-          <div className="divide-y divide-amber-100">
-            {lowStockProducts.slice(0, 5).map((product: any) => (
-              <div key={product.id} className="p-4 flex items-center justify-between hover:bg-amber-100/50 transition-colors">
+      {/* Critical Stock Alerts - Split View */}
+      {(lowStockProducts.length > 0 || criticalTrendyol.length > 0) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Warehouse Critical Stock */}
+          {lowStockProducts.length > 0 ? (
+            <div className="bg-gradient-to-br from-amber-50 to-amber-100/50 border border-amber-200 rounded-3xl overflow-hidden shadow-sm flex flex-col">
+              <div className="p-6 border-b border-amber-200 flex items-center justify-between bg-white/40">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-white border border-amber-200 flex items-center justify-center">
-                    <Package className="w-5 h-5 text-amber-600" />
+                  <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/20">
+                    <AlertTriangle className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <p className="font-medium text-zinc-900">{product.name}</p>
-                    <p className="text-xs text-zinc-500 font-mono">{product.barcode}</p>
+                    <h3 className="font-black text-amber-900 leading-tight">Depo Kritik Stok</h3>
+                    <p className="text-[10px] font-bold text-amber-700 uppercase tracking-widest">{lowStockProducts.length} ürün kritik seviyede</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  {product.shelves?.code && (
-                    <span className="hidden sm:inline-flex items-center gap-1 text-xs text-zinc-500 bg-white px-2 py-1 rounded border border-zinc-200">
-                      <MapPin className="w-3 h-3" />
-                      {product.shelves.code}
-                    </span>
-                  )}
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-rose-600">{product.quantity}</p>
-                    <p className="text-xs text-zinc-400">min: {product.min_stock}</p>
-                  </div>
-                </div>
+                <Link href="/inventory" className="p-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors shadow-lg shadow-amber-600/20">
+                  <ChevronRight className="w-4 h-4" />
+                </Link>
               </div>
-            ))}
-          </div>
+              <div className="divide-y divide-amber-100 flex-1">
+                {lowStockProducts.slice(0, 3).map((product: any) => (
+                  <div key={product.id} className="p-4 flex items-center justify-between hover:bg-white/50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-white border border-amber-200 flex items-center justify-center shadow-sm">
+                        <Package className="w-5 h-5 text-amber-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-zinc-900 leading-tight">{product.name}</p>
+                        <p className="text-[10px] text-zinc-500 font-mono tracking-tighter">{product.barcode}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-black text-rose-600">{product.quantity}</p>
+                      <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Mevcut</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {lowStockProducts.length > 3 && (
+                <Link href="/inventory" className="p-3 bg-white/30 text-center text-[10px] font-black uppercase text-amber-700 hover:bg-white/50 transition-colors tracking-widest">
+                  +{lowStockProducts.length - 3} Ürün Daha
+                </Link>
+              )}
+            </div>
+          ) : (
+            <div className="h-full border-2 border-dashed border-zinc-200 rounded-[2.5rem] flex flex-col items-center justify-center p-8 text-center bg-zinc-50/50">
+              <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mb-3">
+                <Package className="w-6 h-6 text-emerald-600" />
+              </div>
+              <p className="text-sm font-bold text-zinc-900">Depo Stokları İyi</p>
+              <p className="text-xs text-zinc-400">Tüm ürünler güvenli seviyede.</p>
+            </div>
+          )}
 
-          {lowStockProducts.length > 5 && (
-            <div className="p-3 bg-amber-100/50 text-center">
-              <Link href="/inventory" className="text-sm text-amber-700 font-medium hover:underline">
-                +{lowStockProducts.length - 5} ürün daha...
-              </Link>
+          {/* Trendyol Critical Stock */}
+          {criticalTrendyol.length > 0 ? (
+            <div className="bg-gradient-to-br from-orange-50 to-orange-100/50 border border-orange-200 rounded-3xl overflow-hidden shadow-sm flex flex-col">
+              <div className="p-6 border-b border-orange-200 flex items-center justify-between bg-white/40">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/20">
+                    <ShoppingBag className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-orange-900 leading-tight">Trendyol Kritik Stok</h3>
+                    <p className="text-[10px] font-bold text-orange-700 uppercase tracking-widest">{criticalTrendyol.length} ürün tükeniyor</p>
+                  </div>
+                </div>
+                <Link href="/trendyol" className="p-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors shadow-lg shadow-orange-600/20">
+                  <ChevronRight className="w-4 h-4" />
+                </Link>
+              </div>
+              <div className="divide-y divide-orange-100 flex-1">
+                {criticalTrendyol.slice(0, 3).map((product: any) => (
+                  <div key={product.barcode} className="p-4 flex items-center justify-between hover:bg-white/50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-white border border-orange-200 flex items-center justify-center shadow-sm overflow-hidden">
+                        {product.images?.[0] ? (
+                          <img src={product.images[0].url} className="w-full h-full object-cover" />
+                        ) : (
+                          <ShoppingBag className="w-5 h-5 text-orange-600" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-zinc-900 leading-tight truncate">{product.title}</p>
+                        <p className="text-[10px] text-zinc-500 font-mono tracking-tighter">{product.barcode}</p>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-lg font-black text-orange-600">{product.quantity}</p>
+                      <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Mağaza</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {criticalTrendyol.length > 3 && (
+                <Link href="/trendyol" className="p-3 bg-white/30 text-center text-[10px] font-black uppercase text-orange-700 hover:bg-white/50 transition-colors tracking-widest">
+                  +{criticalTrendyol.length - 3} Ürün Daha
+                </Link>
+              )}
+            </div>
+          ) : (
+            <div className="h-full border-2 border-dashed border-zinc-200 rounded-[2.5rem] flex flex-col items-center justify-center p-8 text-center bg-zinc-50/50">
+              <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mb-3">
+                <ShoppingBag className="w-6 h-6 text-emerald-600" />
+              </div>
+              <p className="text-sm font-bold text-zinc-900">Mağaza Stokları İyi</p>
+              <p className="text-xs text-zinc-400">Mağazanızda ürünleriniz yeterli.</p>
             </div>
           )}
         </div>
