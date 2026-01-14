@@ -94,8 +94,8 @@ export default function TrendyolPage() {
                         <button
                             onClick={() => setFilterStatus('all')}
                             className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${filterStatus === 'all'
-                                    ? 'bg-white text-zinc-900 shadow-md shadow-zinc-200/50'
-                                    : 'text-zinc-500 hover:text-zinc-700'
+                                ? 'bg-white text-zinc-900 shadow-md shadow-zinc-200/50'
+                                : 'text-zinc-500 hover:text-zinc-700'
                                 }`}
                         >
                             Hepsi
@@ -103,8 +103,8 @@ export default function TrendyolPage() {
                         <button
                             onClick={() => setFilterStatus('active')}
                             className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${filterStatus === 'active'
-                                    ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
-                                    : 'text-zinc-500 hover:text-zinc-700'
+                                ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
+                                : 'text-zinc-500 hover:text-zinc-700'
                                 }`}
                         >
                             Satışta
@@ -112,8 +112,8 @@ export default function TrendyolPage() {
                         <button
                             onClick={() => setFilterStatus('passive')}
                             className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${filterStatus === 'passive'
-                                    ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20'
-                                    : 'text-zinc-500 hover:text-zinc-700'
+                                ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20'
+                                : 'text-zinc-500 hover:text-zinc-700'
                                 }`}
                         >
                             Pasif
@@ -205,13 +205,13 @@ export default function TrendyolPage() {
                         {/* Content Section */}
                         <div className="p-6 md:p-8 flex-1 flex flex-col">
                             <div className="mb-4 md:mb-6">
-                                <h3 className="font-extrabold text-zinc-900 leading-tight text-base md:text-lg mb-2 line-clamp-2 min-h-[3rem] md:min-h-[3.5rem] group-hover:text-orange-600 transition-colors">
+                                <h3 className="font-extrabold text-zinc-900 leading-tight text-base md:text-lg mb-2 line-clamp-1 min-h-0 group-hover:text-orange-600 transition-colors" title={product.title}>
                                     {product.title}
                                 </h3>
                                 <div className="flex flex-wrap items-center gap-2">
                                     <div className="flex items-center gap-1.5 px-2 py-1 bg-zinc-100 rounded-lg">
                                         <Barcode className="w-3 h-3 text-zinc-500" />
-                                        <span className="text-[9px] md:text-[10px] font-bold text-zinc-600 font-mono tracking-tighter">{product.barcode}</span>
+                                        <span className="text-[10px] md:text-xs font-black text-zinc-800 font-mono">{product.barcode}</span>
                                     </div>
                                     <div className="flex items-center gap-1.5 px-2 py-1 bg-zinc-100 rounded-lg">
                                         <Tag className="w-3 h-3 text-zinc-500" />

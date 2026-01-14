@@ -97,13 +97,13 @@ export default async function Home() {
                         <Package className="w-5 h-5 text-amber-600" />
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-zinc-900 leading-tight">{product.name}</p>
-                        <p className="text-[10px] text-zinc-500 font-mono tracking-tighter">{product.barcode}</p>
+                        <p className="text-sm font-bold text-zinc-900 leading-tight truncate max-w-[150px]" title={product.name}>{product.name}</p>
+                        <p className="text-[10px] text-zinc-600 font-black font-mono tracking-tighter">{product.barcode}</p>
                       </div>
                     </div>
                     <div className="text-right">
                       <p className="text-lg font-black text-rose-600">{product.quantity}</p>
-                      <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Mevcut</p>
+                      <p className="text-[10px] font-bold text-zinc-400 font-mono tracking-wider">{product.barcode.slice(-4)}</p>
                     </div>
                   </div>
                 ))}
@@ -153,13 +153,13 @@ export default async function Home() {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-zinc-900 leading-tight truncate">{product.title}</p>
-                        <p className="text-[10px] text-zinc-500 font-mono tracking-tighter">{product.barcode}</p>
+                        <p className="text-sm font-bold text-zinc-900 leading-tight truncate" title={product.title}>{product.title}</p>
+                        <p className="text-[10px] text-zinc-600 font-black font-mono tracking-tighter">{product.barcode}</p>
                       </div>
                     </div>
                     <div className="text-right shrink-0">
                       <p className="text-lg font-black text-orange-600">{product.quantity}</p>
-                      <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Mağaza</p>
+                      <p className="text-[10px] font-bold text-zinc-400 font-mono tracking-wider">{product.barcode.slice(-4)}</p>
                     </div>
                   </div>
                 ))}
@@ -240,9 +240,9 @@ export default async function Home() {
                       <ScanLine className="w-4 h-4" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-zinc-900 truncate">{log.products?.name}</p>
-                  <p className="text-xs text-zinc-500">
-                    {new Date(log.created_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                  <p className="text-sm font-bold text-zinc-900 truncate" title={log.products?.name}>{log.products?.name}</p>
+                  <p className="text-[10px] text-zinc-500 font-bold font-mono">
+                    {log.products?.barcode}
                   </p>
                 </div>
                 <span className={`text-sm font-bold ${log.transaction_type === 'STOCK_OUT' ? 'text-rose-600' : 'text-emerald-600'

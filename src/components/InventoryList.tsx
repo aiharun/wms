@@ -94,8 +94,8 @@ export default function InventoryList({ products, shelves }: InventoryListProps)
                 {/* Sync Message Feedback */}
                 {syncMessage && (
                     <div className={`flex items-center gap-3 p-4 rounded-xl border animate-scale-in ${syncMessage.type === 'success'
-                            ? 'bg-emerald-50 border-emerald-100 text-emerald-800'
-                            : 'bg-rose-50 border-rose-100 text-rose-800'
+                        ? 'bg-emerald-50 border-emerald-100 text-emerald-800'
+                        : 'bg-rose-50 border-rose-100 text-rose-800'
                         }`}>
                         {syncMessage.type === 'success' ? (
                             <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
@@ -135,11 +135,11 @@ export default function InventoryList({ products, shelves }: InventoryListProps)
                                         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center group-hover:from-indigo-200 group-hover:to-indigo-100 transition-all">
                                             <Package className="w-5 h-5 text-indigo-600" />
                                         </div>
-                                        <span className="font-medium text-zinc-900">{product.name}</span>
+                                        <span className="font-medium text-zinc-900 truncate max-w-[200px]" title={product.name}>{product.name}</span>
                                     </div>
                                 </td>
                                 <td className="px-6 py-4">
-                                    <span className="font-mono text-sm text-zinc-500">{product.barcode}</span>
+                                    <span className="font-mono text-sm text-zinc-600 font-bold whitespace-nowrap">{product.barcode}</span>
                                 </td>
                                 <td className="px-6 py-4">
                                     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-zinc-100 text-zinc-700 rounded-lg text-sm font-medium">
@@ -190,9 +190,9 @@ export default function InventoryList({ products, shelves }: InventoryListProps)
                                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center">
                                         <Package className="w-5 h-5 text-indigo-600" />
                                     </div>
-                                    <div>
-                                        <h4 className="font-bold text-zinc-900">{product.name}</h4>
-                                        <p className="text-sm text-zinc-500 font-mono">{product.barcode}</p>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="font-bold text-zinc-900 truncate" title={product.name}>{product.name}</h4>
+                                        <p className="text-sm text-zinc-600 font-bold font-mono mt-0.5">{product.barcode}</p>
                                     </div>
                                 </div>
                                 <span className="px-2.5 py-1 bg-zinc-100 text-zinc-600 rounded-lg text-sm font-medium">
