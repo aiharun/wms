@@ -97,8 +97,8 @@ export default async function Home() {
                         <Package className="w-5 h-5 text-amber-600" />
                       </div>
                       <div>
-                        <p className="text-sm font-bold text-zinc-900 leading-tight truncate max-w-[150px]" title={product.name}>{product.name}</p>
-                        <p className="text-[10px] text-zinc-600 font-black font-mono tracking-tighter">{product.barcode}</p>
+                        <p className="text-sm font-black text-zinc-900 leading-tight truncate max-w-[180px]" title={product.name}>{product.name}</p>
+                        <p className="text-[11px] text-zinc-800 font-black font-mono mt-0.5">{product.barcode}</p>
                       </div>
                     </div>
                     <div className="text-right">
@@ -153,8 +153,8 @@ export default async function Home() {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-zinc-900 leading-tight truncate" title={product.title}>{product.title}</p>
-                        <p className="text-[10px] text-zinc-600 font-black font-mono tracking-tighter">{product.barcode}</p>
+                        <p className="text-sm font-black text-zinc-900 leading-tight truncate max-w-[180px]" title={product.title}>{product.title}</p>
+                        <p className="text-[11px] text-zinc-800 font-black font-mono mt-0.5">{product.barcode}</p>
                       </div>
                     </div>
                     <div className="text-right shrink-0">
