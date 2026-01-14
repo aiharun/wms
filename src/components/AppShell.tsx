@@ -18,9 +18,12 @@ import {
     Warehouse,
     ShoppingBag,
     ArrowDownLeft,
-    ArrowUpRight
+    ArrowUpRight,
+    ChevronDown,
+    ChevronRight as ChevronRightIcon
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useEffect } from 'react'
 
 interface AppShellProps {
     children: React.ReactNode
@@ -28,20 +31,63 @@ interface AppShellProps {
 
 export default function AppShell({ children }: AppShellProps) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+    const [isStockOpen, setIsStockOpen] = useState(true)
     const pathname = usePathname()
 
-    const navigation = [
+    // Auto-open stock menu if we are on a stock page
+    const stockHrefs = ['/stock-in', '/stock-out', '/inventory', '/low-stock', '/products/new']
+    const isCurrentlyOnStockPage = stockHrefs.includes(pathname)
+
+    useEffect(() => {
+        if (isCurrentlyOnStockPage) {
+            setIsStockOpen(true)
+        }
+    }, [pathname, isCurrentlyOnStockPage])
+
+    const mainNavigation = [
         { name: 'Genel Bakış', href: '/', icon: LayoutDashboard },
+    ]
+
+    const stockNavigation = [
+        { name: 'Depo Stoğu', href: '/inventory', icon: Package },
         { name: 'Stok Giriş', href: '/stock-in', icon: ArrowDownLeft },
         { name: 'Stok Çıkış', href: '/stock-out', icon: ArrowUpRight },
-        { name: 'Depo Stoğu', href: '/inventory', icon: Package },
         { name: 'Kritik Stoklar', href: '/low-stock', icon: AlertTriangle },
+        { name: 'Yeni Ürün', href: '/products/new', icon: PlusCircle },
+    ]
+
+    const otherNavigation = [
         { name: 'Raflar', href: '/shelves', icon: LibrarySquare },
         { name: 'Trendyol', href: '/trendyol', icon: ShoppingBag },
         { name: 'Hızlı Kontrol', href: '/audit', icon: ScanLine },
-        { name: 'Ürün Ekle', href: '/products/new', icon: PlusCircle },
         { name: 'Ayarlar', href: '/settings', icon: Settings },
     ]
+
+    const NavLink = ({ item, isSubItem = false }: { item: any, isSubItem?: boolean }) => {
+        const isActive = pathname === item.href
+        return (
+            <Link
+                href={item.href}
+                className={cn(
+                    "group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
+                    isActive
+                        ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-500/20"
+                        : "text-slate-400 hover:text-white hover:bg-white/5",
+                    isSubItem && "pl-11 py-2.5 text-sm"
+                )}
+            >
+                <item.icon className={cn(
+                    isSubItem ? "w-4 h-4" : "w-5 h-5",
+                    "transition-transform duration-200",
+                    !isActive && "group-hover:scale-110"
+                )} />
+                <span className="font-medium">{item.name}</span>
+                {isActive && !isSubItem && (
+                    <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />
+                )}
+            </Link>
+        )
+    }
 
     return (
         <div className="min-h-screen bg-zinc-50 flex flex-col md:flex-row">
@@ -61,32 +107,44 @@ export default function AppShell({ children }: AppShellProps) {
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-                    {navigation.map((item, index) => {
-                        const isActive = pathname === item.href
-                        return (
-                            <Link
-                                key={item.name}
-                                href={item.href}
-                                className={cn(
-                                    "group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
-                                    isActive
-                                        ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-500/20"
-                                        : "text-slate-400 hover:text-white hover:bg-white/5"
-                                )}
-                                style={{ animationDelay: `${index * 50}ms` }}
-                            >
-                                <item.icon className={cn(
-                                    "w-5 h-5 transition-transform duration-200",
-                                    !isActive && "group-hover:scale-110"
-                                )} />
-                                <span className="font-medium">{item.name}</span>
-                                {isActive && (
-                                    <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />
-                                )}
-                            </Link>
-                        )
-                    })}
+                <nav className="flex-1 p-4 space-y-1 overflow-y-auto custom-scrollbar">
+                    {mainNavigation.map((item) => <NavLink key={item.name} item={item} />)}
+
+                    {/* Collapsible Stock Menu */}
+                    <div className="pt-2">
+                        <button
+                            onClick={() => setIsStockOpen(!isStockOpen)}
+                            className={cn(
+                                "group flex items-center justify-between w-full px-4 py-3 rounded-xl transition-all duration-200",
+                                isCurrentlyOnStockPage ? "text-white" : "text-slate-400 hover:text-white hover:bg-white/5"
+                            )}
+                        >
+                            <div className="flex items-center gap-3">
+                                <Package className="w-5 h-5" />
+                                <span className="font-bold uppercase tracking-wider text-[11px]">Stok İşlemleri</span>
+                            </div>
+                            <ChevronDown className={cn(
+                                "w-4 h-4 transition-transform duration-300 opacity-50",
+                                isStockOpen ? "rotate-0" : "-rotate-90"
+                            )} />
+                        </button>
+
+                        <div className={cn(
+                            "grid transition-all duration-300 ease-in-out",
+                            isStockOpen ? "grid-rows-[1fr] opacity-100 mt-1" : "grid-rows-[0fr] opacity-0 overflow-hidden"
+                        )}>
+                            <div className="overflow-hidden space-y-1">
+                                {stockNavigation.map((item) => <NavLink key={item.name} item={item} isSubItem />)}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="pt-4 pb-2">
+                        <div className="px-4 py-2">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Sistem</span>
+                        </div>
+                        {otherNavigation.map((item) => <NavLink key={item.name} item={item} />)}
+                    </div>
                 </nav>
 
                 {/* Footer */}
@@ -116,25 +174,87 @@ export default function AppShell({ children }: AppShellProps) {
 
             {/* Mobile Drawer - Premium */}
             {isMobileMenuOpen && (
-                <div className="md:hidden fixed inset-0 z-30 bg-white pt-20 px-4 animate-fade-in">
-                    <nav className="space-y-2">
-                        {navigation.map((item, index) => (
+                <div className="md:hidden fixed inset-0 z-50 bg-slate-900 pt-20 px-4 animate-fade-in overflow-y-auto">
+                    <nav className="space-y-2 pb-20">
+                        {mainNavigation.map((item) => (
                             <Link
                                 key={item.name}
                                 href={item.href}
                                 onClick={() => setIsMobileMenuOpen(false)}
                                 className={cn(
-                                    "flex items-center gap-4 px-5 py-4 rounded-2xl text-lg transition-all animate-slide-in",
+                                    "flex items-center gap-4 px-6 py-4 rounded-2xl text-lg transition-all",
                                     pathname === item.href
                                         ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg"
-                                        : "text-zinc-600 hover:bg-zinc-100"
+                                        : "text-slate-300 hover:bg-white/5"
                                 )}
-                                style={{ animationDelay: `${index * 30}ms` }}
                             >
                                 <item.icon className="w-6 h-6" />
-                                <span className="font-medium">{item.name}</span>
+                                <span className="font-medium text-lg">{item.name}</span>
                             </Link>
                         ))}
+
+                        {/* Mobile Stock Group */}
+                        <div className="pt-4">
+                            <button
+                                onClick={() => setIsStockOpen(!isStockOpen)}
+                                className={cn(
+                                    "flex items-center justify-between w-full px-6 py-4 rounded-2xl transition-all",
+                                    isCurrentlyOnStockPage ? "text-white" : "text-slate-400"
+                                )}
+                            >
+                                <div className="flex items-center gap-4">
+                                    <Package className="w-6 h-6" />
+                                    <span className="font-black uppercase tracking-widest text-sm">Stok İşlemleri</span>
+                                </div>
+                                <ChevronDown className={cn(
+                                    "w-5 h-5 transition-transform duration-300",
+                                    isStockOpen ? "rotate-0" : "-rotate-90"
+                                )} />
+                            </button>
+
+                            <div className={cn(
+                                "grid transition-all duration-300 ease-in-out",
+                                isStockOpen ? "grid-rows-[1fr] opacity-100 mt-2" : "grid-rows-[0fr] opacity-0 overflow-hidden"
+                            )}>
+                                <div className="overflow-hidden space-y-2">
+                                    {stockNavigation.map((item) => (
+                                        <Link
+                                            key={item.name}
+                                            href={item.href}
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                            className={cn(
+                                                "flex items-center gap-4 ml-8 px-6 py-4 rounded-2xl transition-all",
+                                                pathname === item.href
+                                                    ? "bg-white/10 text-white"
+                                                    : "text-slate-400 hover:bg-white/5"
+                                            )}
+                                        >
+                                            <item.icon className="w-5 h-5" />
+                                            <span className="font-medium">{item.name}</span>
+                                        </Link>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="pt-6 border-t border-white/5">
+                            {otherNavigation.map((item) => (
+                                <Link
+                                    key={item.name}
+                                    href={item.href}
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className={cn(
+                                        "flex items-center gap-4 px-6 py-4 rounded-2xl text-lg transition-all",
+                                        pathname === item.href
+                                            ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg"
+                                            : "text-slate-300 hover:bg-white/5"
+                                    )}
+                                >
+                                    <item.icon className="w-6 h-6" />
+                                    <span className="font-medium text-lg">{item.name}</span>
+                                </Link>
+                            ))}
+                        </div>
                     </nav>
                 </div>
             )}
