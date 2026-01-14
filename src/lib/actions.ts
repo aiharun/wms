@@ -266,7 +266,7 @@ export async function updateSettings(key: string, value: string) {
     return { success: true }
 }
 
-export async function fetchTrendyolProducts() {
+export async function fetchTrendyolProducts(page: number = 0, size: number = 50) {
     // 1. Get credentials from settings
     const settings = await getSettings()
     const sellerId = settings.find(s => s.key === 'trendyol_seller_id')?.value
@@ -281,7 +281,7 @@ export async function fetchTrendyolProducts() {
     const auth = Buffer.from(`${apiKey}:${apiSecret}`).toString('base64')
 
     try {
-        const response = await fetch(`https://api.trendyol.com/integration/product/sellers/${sellerId}/products`, {
+        const response = await fetch(`https://api.trendyol.com/integration/product/sellers/${sellerId}/products?page=${page}&size=${size}`, {
             headers: {
                 'Authorization': `Basic ${auth}`,
                 'User-Agent': `${sellerId} - SelfIntegration`
@@ -303,7 +303,14 @@ export async function fetchTrendyolProducts() {
 
         if (contentType && contentType.includes('application/json')) {
             const data = await response.json()
-            return { success: true, products: data.content || [] }
+            return {
+                success: true,
+                products: data.content || [],
+                totalElements: data.totalElements || 0,
+                totalPages: data.totalPages || 0,
+                page: data.page || 0,
+                size: data.size || 50
+            }
         } else {
             throw new Error('Trendyol API geçersiz bir yanıt döndürdü (JSON bekleniyordu).')
         }
@@ -312,14 +319,35 @@ export async function fetchTrendyolProducts() {
         return { error: error.message || 'Trendyol ürünleri çekilemedi.' }
     }
 }
+
+export async function fetchAllTrendyolProducts() {
+    let allProducts: any[] = []
+    let currentPage = 0
+    let totalPages = 1
+
+    try {
+        while (currentPage < totalPages) {
+            const result = await fetchTrendyolProducts(currentPage, 100)
+            if (result.error) throw new Error(result.error)
+
+            allProducts = [...allProducts, ...(result.products || [])]
+            totalPages = result.totalPages || 1
+            currentPage++
+        }
+        return { success: true, products: allProducts }
+    } catch (error: any) {
+        console.error('Fetch all products error:', error)
+        return { error: error.message || 'Ürünler çekilemedi.' }
+    }
+}
 export async function syncTrendyolProducts() {
     try {
-        // 1. Fetch products from Trendyol
-        const result = await fetchTrendyolProducts()
+        // 1. Fetch ALL products using helper
+        const result = await fetchAllTrendyolProducts()
         if (result.error) throw new Error(result.error)
-        const trendyolProducts = result.products || []
+        const allTrendyolProducts = result.products || []
 
-        if (trendyolProducts.length === 0) {
+        if (allTrendyolProducts.length === 0) {
             return { success: true, count: 0, message: 'Aktarılacak ürün bulunamadı.' }
         }
 
@@ -332,7 +360,7 @@ export async function syncTrendyolProducts() {
         const localBarcodes = new Set(localProducts?.map(p => p.barcode) || [])
 
         // 3. Filter products that don't exist locally
-        const newProducts = trendyolProducts
+        const newProducts = allTrendyolProducts
             .filter((p: any) => !localBarcodes.has(p.barcode))
             .map((p: any) => ({
                 name: p.title,
@@ -370,21 +398,13 @@ export async function updateDamagedStock(
 ) {
     try {
         // 1. Get current product
-        console.log('[updateDamagedStock] Querying product ID:', productId)
-        const { data: product, error: fetchError } = await supabase
+        const { data: product } = await supabase
             .from('products')
             .select('id, quantity, damaged_quantity, shelf_id')
             .eq('id', productId)
             .single()
 
-        if (fetchError || !product) {
-            console.error('[updateDamagedStock] Fetch error details:', {
-                error: fetchError,
-                productId,
-                found: !!product
-            })
-            throw new Error(`Ürün veritabanında bulunamadı (ID: ${productId}). Hata: ${fetchError?.message || 'Kayıt yok'}`)
-        }
+        if (!product) throw new Error('Product not found')
 
         let newQuantity = product.quantity
         let newDamagedQuantity = product.damaged_quantity

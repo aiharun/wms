@@ -1,4 +1,4 @@
-import { fetchTrendyolProducts, getProducts } from '@/lib/actions'
+import { fetchAllTrendyolProducts, getProducts } from '@/lib/actions'
 import { ShoppingBag } from 'lucide-react'
 import TrendyolLimitList from '@/components/TrendyolLimitList'
 
@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function TrendyolLimitsPage() {
     const [trendyolData, allLocalProducts] = await Promise.all([
-        fetchTrendyolProducts(),
+        fetchAllTrendyolProducts(),
         getProducts()
     ])
 

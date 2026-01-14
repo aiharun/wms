@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { ShoppingBag, RefreshCcw, Search, Barcode, Tag, Package, AlertCircle, ExternalLink } from 'lucide-react'
-import { fetchTrendyolProducts } from '@/lib/actions'
+import { fetchAllTrendyolProducts, syncTrendyolProducts } from '@/lib/actions'
 
 interface TrendyolProduct {
     id: string
@@ -32,26 +32,36 @@ export default function TrendyolPage() {
     const loadProducts = async () => {
         setLoading(true)
         setError(null)
-        const result = await fetchTrendyolProducts()
-        if (result.error) {
-            setError(result.error)
+        try {
+            const result = await fetchAllTrendyolProducts()
+            if (result.error) throw new Error(result.error)
+            setProducts(result.products as TrendyolProduct[] || [])
+        } catch (err: any) {
+            setError(err.message)
             setProducts([])
-        } else {
-            setProducts(result.products || [])
+        } finally {
+            setLoading(false)
         }
-        setLoading(false)
     }
 
     const handleRefresh = async () => {
         setRefreshing(true)
         setError(null)
-        const result = await fetchTrendyolProducts()
-        if (result.error) {
-            setError(result.error)
-        } else {
-            setProducts(result.products || [])
-        }
+        await loadProducts()
         setRefreshing(false)
+    }
+
+    const handleSync = async () => {
+        setRefreshing(true)
+        try {
+            const result = await syncTrendyolProducts()
+            if (result.error) throw new Error(result.error)
+            alert(result.message || 'Ürünler başarıyla senkronize edildi.')
+        } catch (err: any) {
+            alert(err.message || 'Senkronizasyon sırasında hata oluştu.')
+        } finally {
+            setRefreshing(false)
+        }
     }
 
     const filteredProducts = products.filter(p => {
@@ -131,6 +141,14 @@ export default function TrendyolPage() {
                                 className="w-full pl-10 pr-4 py-3 bg-white border border-zinc-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all shadow-sm"
                             />
                         </div>
+                        <button
+                            onClick={handleSync}
+                            disabled={refreshing}
+                            className="flex items-center gap-2 px-6 py-3 bg-orange-500 text-white text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-orange-600 transition-all shadow-md shadow-orange-500/20 active:scale-95 disabled:opacity-50"
+                        >
+                            <RefreshCcw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                            Depoya Aktar
+                        </button>
                         <button
                             onClick={handleRefresh}
                             disabled={refreshing}
