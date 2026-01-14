@@ -85,7 +85,7 @@ export default async function Home() {
                     <p className="text-[10px] font-bold text-amber-700 uppercase tracking-widest">{lowStockProducts.length} ürün kritik seviyede</p>
                   </div>
                 </div>
-                <Link href="/inventory" className="p-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors shadow-lg shadow-amber-600/20">
+                <Link href="/low-stock" className="p-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors shadow-lg shadow-amber-600/20">
                   <ChevronRight className="w-4 h-4" />
                 </Link>
               </div>
@@ -109,7 +109,7 @@ export default async function Home() {
                 ))}
               </div>
               {lowStockProducts.length > 3 && (
-                <Link href="/inventory" className="p-3 bg-white/30 text-center text-[10px] font-black uppercase text-amber-700 hover:bg-white/50 transition-colors tracking-widest">
+                <Link href="/low-stock" className="p-3 bg-white/30 text-center text-[10px] font-black uppercase text-amber-700 hover:bg-white/50 transition-colors tracking-widest">
                   +{lowStockProducts.length - 3} Ürün Daha
                 </Link>
               )}
@@ -137,7 +137,7 @@ export default async function Home() {
                     <p className="text-[10px] font-bold text-orange-700 uppercase tracking-widest">{criticalTrendyol.length} ürün tükeniyor</p>
                   </div>
                 </div>
-                <Link href="/trendyol" className="p-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors shadow-lg shadow-orange-600/20">
+                <Link href="/low-stock" className="p-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors shadow-lg shadow-orange-600/20">
                   <ChevronRight className="w-4 h-4" />
                 </Link>
               </div>
@@ -165,7 +165,7 @@ export default async function Home() {
                 ))}
               </div>
               {criticalTrendyol.length > 3 && (
-                <Link href="/trendyol" className="p-3 bg-white/30 text-center text-[10px] font-black uppercase text-orange-700 hover:bg-white/50 transition-colors tracking-widest">
+                <Link href="/low-stock" className="p-3 bg-white/30 text-center text-[10px] font-black uppercase text-orange-700 hover:bg-white/50 transition-colors tracking-widest">
                   +{criticalTrendyol.length - 3} Ürün Daha
                 </Link>
               )}
@@ -206,15 +206,15 @@ export default async function Home() {
             <p className="text-sm text-zinc-500">Bugün Çıkış</p>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border-zinc-100 shadow-sm">
+          <Link href="/low-stock" className="bg-white p-5 rounded-2xl border border-zinc-100 shadow-sm hover:border-amber-200 transition-colors group">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
-                <AlertTriangle className="w-5 h-5 text-amber-600" />
+              <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition-colors">
+                <AlertTriangle className="w-5 h-5 text-amber-600 group-hover:text-white" />
               </div>
             </div>
-            <p className="text-2xl font-bold text-zinc-900">{lowStockProducts.length}</p>
+            <p className="text-2xl font-bold text-zinc-900">{lowStockProducts.length + criticalTrendyol.length}</p>
             <p className="text-sm text-zinc-500">Kritik Stok</p>
-          </div>
+          </Link>
         </div>
 
         {/* Activity Feed */}
