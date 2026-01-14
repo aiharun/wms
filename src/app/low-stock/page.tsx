@@ -1,17 +1,27 @@
-
-import { getLowStockProducts, fetchTrendyolProducts } from '@/lib/actions'
+import { getLowStockProducts, fetchTrendyolProducts, getProducts } from '@/lib/actions'
 import { AlertTriangle } from 'lucide-react'
 import LowStockList from '@/components/LowStockList'
 
 export const dynamic = 'force-dynamic'
 
 export default async function LowStockPage() {
-    const [warehouseProducts, trendyolData] = await Promise.all([
+    const [warehouseProducts, trendyolData, allLocalProducts] = await Promise.all([
         getLowStockProducts(),
-        fetchTrendyolProducts()
+        fetchTrendyolProducts(),
+        getProducts()
     ])
 
-    const trendyolProducts = (trendyolData.products || []).filter((p: any) => p.onSale && p.quantity <= 5)
+    // Create a lookup map for local product settings by barcode
+    const localLimitMap = new Map(allLocalProducts.map(p => [p.barcode, { id: p.id, min_stock: p.min_stock }]))
+
+    const trendyolProducts = (trendyolData.products || []).map((p: any) => {
+        const localData = localLimitMap.get(p.barcode)
+        return {
+            ...p,
+            localId: localData?.id,
+            minStock: localData?.min_stock || 10
+        }
+    }).filter((p: any) => p.onSale && p.quantity <= p.minStock)
 
     return (
         <div className="space-y-8">

@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Package, ShoppingBag, MapPin, ExternalLink, Barcode, AlertTriangle, ChevronRight, TrendingDown } from 'lucide-react'
+import { Package, ShoppingBag, MapPin, ExternalLink, Barcode, AlertTriangle, ChevronRight, TrendingDown, RefreshCw } from 'lucide-react'
+import MinStockEditor from './MinStockEditor'
 
 interface LowStockListProps {
     warehouseProducts: any[]
@@ -18,8 +19,8 @@ export default function LowStockList({ warehouseProducts, trendyolProducts }: Lo
                 <button
                     onClick={() => setActiveTab('warehouse')}
                     className={`relative overflow-hidden p-6 rounded-[2rem] border-2 transition-all duration-500 text-left ${activeTab === 'warehouse'
-                            ? 'bg-zinc-900 border-zinc-900 text-white shadow-2xl shadow-zinc-900/20 scale-[1.02]'
-                            : 'bg-white border-zinc-100 text-zinc-900 hover:border-zinc-200'
+                        ? 'bg-zinc-900 border-zinc-900 text-white shadow-2xl shadow-zinc-900/20 scale-[1.02]'
+                        : 'bg-white border-zinc-100 text-zinc-900 hover:border-zinc-200'
                         }`}
                 >
                     <div className="flex items-center justify-between mb-4 relative z-10">
@@ -39,8 +40,8 @@ export default function LowStockList({ warehouseProducts, trendyolProducts }: Lo
                 <button
                     onClick={() => setActiveTab('trendyol')}
                     className={`relative overflow-hidden p-6 rounded-[2rem] border-2 transition-all duration-500 text-left ${activeTab === 'trendyol'
-                            ? 'bg-orange-600 border-orange-600 text-white shadow-2xl shadow-orange-600/20 scale-[1.02]'
-                            : 'bg-white border-zinc-100 text-zinc-900 hover:border-zinc-200'
+                        ? 'bg-orange-600 border-orange-600 text-white shadow-2xl shadow-orange-600/20 scale-[1.02]'
+                        : 'bg-white border-zinc-100 text-zinc-900 hover:border-zinc-200'
                         }`}
                 >
                     <div className="flex items-center justify-between mb-4 relative z-10">
@@ -109,9 +110,15 @@ export default function LowStockList({ warehouseProducts, trendyolProducts }: Lo
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="text-right shrink-0">
-                                            <div className="text-2xl font-black text-rose-600 leading-tight">{product.quantity}</div>
-                                            <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest whitespace-nowrap">Mevcut Stok</div>
+                                        <div className="flex items-center gap-6 self-end sm:self-auto">
+                                            <div className="text-center">
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1">Limit</p>
+                                                <MinStockEditor productId={product.id} initialMinStock={product.min_stock} />
+                                            </div>
+                                            <div className="text-right shrink-0 border-l border-zinc-100 pl-6">
+                                                <div className="text-2xl font-black text-rose-600 leading-tight">{product.quantity}</div>
+                                                <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest whitespace-nowrap">Stok</div>
+                                            </div>
                                         </div>
                                     </div>
                                 ))
@@ -158,14 +165,23 @@ export default function LowStockList({ warehouseProducts, trendyolProducts }: Lo
                                                     </span>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center justify-between mt-4">
-                                                <div className="flex items-baseline gap-2">
-                                                    <span className="text-lg font-black text-zinc-900">{product.salePrice} <span className="text-xs">TL</span></span>
-                                                    <span className="text-[10px] font-bold text-zinc-400 line-through">{product.listPrice} TL</span>
+                                            <div className="flex items-center justify-between pt-4 border-t border-zinc-100">
+                                                <div>
+                                                    {product.localId ? (
+                                                        <div className="flex flex-col items-start gap-1">
+                                                            <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Kritik Limit</p>
+                                                            <MinStockEditor productId={product.localId} initialMinStock={product.minStock} />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-center gap-2 text-zinc-400 group/sync">
+                                                            <RefreshCw className="w-3.5 h-3.5" />
+                                                            <span className="text-[10px] font-bold uppercase tracking-tight">Limit için senkronize et</span>
+                                                        </div>
+                                                    )}
                                                 </div>
-                                                <div className="flex items-center gap-1 px-3 py-1 bg-orange-600 text-white rounded-xl shadow-lg shadow-orange-600/20">
-                                                    <span className="text-lg font-black leading-none">{product.quantity}</span>
-                                                    <span className="text-[10px] font-bold uppercase tracking-tighter opacity-80">Adet</span>
+                                                <div className="flex items-center gap-1.5 px-4 py-2 bg-orange-600 text-white rounded-2xl shadow-lg shadow-orange-600/20">
+                                                    <span className="text-xl font-black leading-none">{product.quantity}</span>
+                                                    <span className="text-[10px] font-bold uppercase tracking-tighter opacity-80">Mağaza Stoğu</span>
                                                 </div>
                                             </div>
                                         </div>
