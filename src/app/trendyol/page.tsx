@@ -14,6 +14,7 @@ interface TrendyolProduct {
     stockCode: string
     onSale: boolean
     images?: { url: string }[]
+    productContentId?: number
 }
 
 export default function TrendyolPage() {
@@ -150,50 +151,63 @@ export default function TrendyolPage() {
                             {/* Hover Overlay */}
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-6 backdrop-blur-[2px]">
                                 <a
-                                    href={`https://www.trendyol.com/brand/product-p-${product.barcode}`}
+                                    href={product.productContentId ? `https://www.trendyol.com/p/${product.productContentId}` : `https://www.trendyol.com/sr?q=${product.barcode}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="w-full flex items-center justify-center gap-2 py-4 bg-white text-zinc-900 text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-orange-500 hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-500"
+                                    className="w-full flex items-center justify-center gap-2 py-4 bg-white text-zinc-900 text-xs font-black uppercase tracking-widest rounded-2xl hover:bg-orange-500 hover:text-white transition-all transform translate-y-4 group-hover:translate-y-0 duration-500 shadow-xl"
                                 >
                                     <ExternalLink className="w-4 h-4" />
-                                    Trendyol Mağaza
+                                    Mağazada Gör
                                 </a>
                             </div>
                         </div>
 
                         {/* Content Section */}
-                        <div className="p-8 flex-1 flex flex-col">
-                            <div className="mb-6">
-                                <h3 className="font-extrabold text-zinc-900 leading-tight text-lg mb-2 line-clamp-2 min-h-[3.5rem] group-hover:text-orange-600 transition-colors">
+                        <div className="p-6 md:p-8 flex-1 flex flex-col">
+                            <div className="mb-4 md:mb-6">
+                                <h3 className="font-extrabold text-zinc-900 leading-tight text-base md:text-lg mb-2 line-clamp-2 min-h-[3rem] md:min-h-[3.5rem] group-hover:text-orange-600 transition-colors">
                                     {product.title}
                                 </h3>
-                                <div className="flex items-center gap-2">
-                                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-zinc-100 rounded-lg">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <div className="flex items-center gap-1.5 px-2 py-1 bg-zinc-100 rounded-lg">
                                         <Barcode className="w-3 h-3 text-zinc-500" />
-                                        <span className="text-[10px] font-bold text-zinc-600 font-mono tracking-tighter">{product.barcode}</span>
+                                        <span className="text-[9px] md:text-[10px] font-bold text-zinc-600 font-mono tracking-tighter">{product.barcode}</span>
                                     </div>
-                                    <div className="flex items-center gap-1.5 px-2.5 py-1 bg-zinc-100 rounded-lg">
+                                    <div className="flex items-center gap-1.5 px-2 py-1 bg-zinc-100 rounded-lg">
                                         <Tag className="w-3 h-3 text-zinc-500" />
-                                        <span className="text-[10px] font-bold text-zinc-600 tracking-tighter uppercase">{product.stockCode}</span>
+                                        <span className="text-[9px] md:text-[10px] font-bold text-zinc-600 tracking-tighter uppercase">{product.stockCode}</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4 mt-auto">
-                                <div className="p-5 bg-zinc-50 rounded-3xl border border-zinc-100/50 group-hover:bg-white group-hover:border-orange-100 transition-all">
-                                    <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">Satış Fiyatı</p>
+                            <div className="grid grid-cols-2 gap-3 md:gap-4 mt-auto">
+                                <div className="p-4 md:p-5 bg-zinc-50 rounded-2xl md:rounded-3xl border border-zinc-100/50 group-hover:bg-white group-hover:border-orange-100 transition-all">
+                                    <p className="text-[9px] md:text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1 md:mb-1.5">Satış Fiyatı</p>
                                     <div className="flex items-baseline gap-1">
-                                        <span className="text-2xl font-black text-zinc-900">{product.salePrice}</span>
-                                        <span className="text-xs font-bold text-zinc-400">TL</span>
+                                        <span className="text-lg md:text-2xl font-black text-zinc-900">{product.salePrice}</span>
+                                        <span className="text-[10px] font-bold text-zinc-400">TL</span>
                                     </div>
                                 </div>
-                                <div className="p-5 bg-zinc-50 rounded-3xl border border-zinc-100/50 group-hover:bg-white group-hover:border-orange-100 transition-all">
-                                    <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5 text-right">Stok</p>
+                                <div className="p-4 md:p-5 bg-zinc-50 rounded-2xl md:rounded-3xl border border-zinc-100/50 group-hover:bg-white group-hover:border-orange-100 transition-all">
+                                    <p className="text-[9px] md:text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1 md:mb-1.5 text-right">Stok</p>
                                     <div className="flex items-baseline justify-end gap-1.5">
-                                        <span className={`text-2xl font-black ${product.quantity === 0 ? 'text-rose-500' : 'text-zinc-900'}`}>{product.quantity}</span>
-                                        <span className="text-[10px] font-bold text-zinc-400 uppercase">ADET</span>
+                                        <span className={`text-lg md:text-2xl font-black ${product.quantity === 0 ? 'text-rose-500' : 'text-zinc-900'}`}>{product.quantity}</span>
+                                        <span className="text-[9px] md:text-[10px] font-bold text-zinc-400 uppercase">ADET</span>
                                     </div>
                                 </div>
+                            </div>
+
+                            {/* Mobile Store Button - Visible only on small screens without hover */}
+                            <div className="mt-4 md:hidden">
+                                <a
+                                    href={product.productContentId ? `https://www.trendyol.com/p/${product.productContentId}` : `https://www.trendyol.com/sr?q=${product.barcode}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-full flex items-center justify-center gap-2 py-3 bg-zinc-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl"
+                                >
+                                    <ExternalLink className="w-4 h-4" />
+                                    Trendyol'da Gör
+                                </a>
                             </div>
                         </div>
                     </div>
