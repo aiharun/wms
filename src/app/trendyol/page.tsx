@@ -23,6 +23,7 @@ export default function TrendyolPage() {
     const [refreshing, setRefreshing] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [searchQuery, setSearchQuery] = useState('')
+    const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'passive'>('all')
 
     useEffect(() => {
         loadProducts()
@@ -53,10 +54,17 @@ export default function TrendyolPage() {
         setRefreshing(false)
     }
 
-    const filteredProducts = products.filter(p =>
-        p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.barcode.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    const filteredProducts = products.filter(p => {
+        const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            p.barcode.toLowerCase().includes(searchQuery.toLowerCase())
+
+        const matchesStatus =
+            filterStatus === 'all' ||
+            (filterStatus === 'active' && p.onSale) ||
+            (filterStatus === 'passive' && !p.onSale)
+
+        return matchesSearch && matchesStatus
+    })
 
     if (loading) {
         return (
@@ -81,25 +89,57 @@ export default function TrendyolPage() {
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                    <div className="relative flex-1 md:w-64">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                        <input
-                            type="text"
-                            placeholder="Ürün veya barkod ara..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-3 bg-white border border-zinc-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all shadow-sm"
-                        />
+                <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4">
+                    <div className="flex bg-zinc-100 p-1 rounded-2xl">
+                        <button
+                            onClick={() => setFilterStatus('all')}
+                            className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${filterStatus === 'all'
+                                    ? 'bg-white text-zinc-900 shadow-md shadow-zinc-200/50'
+                                    : 'text-zinc-500 hover:text-zinc-700'
+                                }`}
+                        >
+                            Hepsi
+                        </button>
+                        <button
+                            onClick={() => setFilterStatus('active')}
+                            className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${filterStatus === 'active'
+                                    ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
+                                    : 'text-zinc-500 hover:text-zinc-700'
+                                }`}
+                        >
+                            Satışta
+                        </button>
+                        <button
+                            onClick={() => setFilterStatus('passive')}
+                            className={`flex-1 md:flex-none px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${filterStatus === 'passive'
+                                    ? 'bg-rose-500 text-white shadow-md shadow-rose-500/20'
+                                    : 'text-zinc-500 hover:text-zinc-700'
+                                }`}
+                        >
+                            Pasif
+                        </button>
                     </div>
-                    <button
-                        onClick={handleRefresh}
-                        disabled={refreshing}
-                        className="p-3 bg-white border border-zinc-200 text-zinc-600 rounded-2xl hover:border-orange-500 hover:text-orange-600 transition-all shadow-sm active:scale-95 disabled:opacity-50"
-                        title="Yenile"
-                    >
-                        <RefreshCcw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
-                    </button>
+
+                    <div className="flex items-center gap-3">
+                        <div className="relative flex-1 md:w-64">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                            <input
+                                type="text"
+                                placeholder="Ürün veya barkod ara..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-10 pr-4 py-3 bg-white border border-zinc-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all shadow-sm"
+                            />
+                        </div>
+                        <button
+                            onClick={handleRefresh}
+                            disabled={refreshing}
+                            className="p-3 bg-white border border-zinc-200 text-zinc-600 rounded-2xl hover:border-orange-500 hover:text-orange-600 transition-all shadow-sm active:scale-95 disabled:opacity-50"
+                            title="Yenile"
+                        >
+                            <RefreshCcw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
+                        </button>
+                    </div>
                 </div>
             </div>
 
