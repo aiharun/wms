@@ -33,7 +33,7 @@ export default function AppShell({ children }: AppShellProps) {
         { name: 'Genel Bakış', href: '/', icon: LayoutDashboard },
         { name: 'Stok Giriş', href: '/stock-in', icon: ArrowDownLeft },
         { name: 'Stok Çıkış', href: '/stock-out', icon: ArrowUpRight },
-        { name: 'Envanter', href: '/inventory', icon: Package },
+        { name: 'Depo Stoğu', href: '/inventory', icon: Package },
         { name: 'Raflar', href: '/shelves', icon: LibrarySquare },
         { name: 'Trendyol', href: '/trendyol', icon: ShoppingBag },
         { name: 'Hızlı Kontrol', href: '/audit', icon: ScanLine },

@@ -15,7 +15,7 @@ export default async function InventoryPage() {
                     <Package className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                    <h1 className="text-2xl font-bold text-zinc-900">Stok Listesi</h1>
+                    <h1 className="text-2xl font-bold text-zinc-900">Depo Stoğu</h1>
                     <p className="text-zinc-500 text-sm">{products.length} ürün kayıtlı</p>
                 </div>
             </div>

@@ -59,7 +59,7 @@ export default async function Home() {
         >
           <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-8 translate-x-8" />
           <Package className="w-8 h-8 mb-3 relative z-10" />
-          <span className="font-bold text-lg block relative z-10">Stok Listesi</span>
+          <span className="font-bold text-lg block relative z-10">Depo Stoğu</span>
           <span className="text-slate-300 text-sm relative z-10">Tümünü gör</span>
           <ChevronRight className="absolute bottom-4 right-4 w-5 h-5 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
         </Link>
