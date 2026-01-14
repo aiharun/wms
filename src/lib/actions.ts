@@ -343,6 +343,70 @@ export async function syncTrendyolProducts() {
     }
 }
 
+export async function updateDamagedStock(
+    productId: string,
+    quantityChange: number,
+    type: 'DAMAGED_IN' | 'DAMAGED_OUT',
+    fromMainStock: boolean = false
+) {
+    try {
+        // 1. Get current product
+        const { data: product } = await supabase
+            .from('products')
+            .select('quantity, damaged_quantity, shelf_id')
+            .eq('id', productId)
+            .single()
+
+        if (!product) throw new Error('Product not found')
+
+        let newQuantity = product.quantity
+        let newDamagedQuantity = product.damaged_quantity
+
+        if (type === 'DAMAGED_IN') {
+            newDamagedQuantity += quantityChange
+            if (fromMainStock) {
+                newQuantity = Math.max(0, newQuantity - quantityChange)
+            }
+        } else {
+            newDamagedQuantity = Math.max(0, newDamagedQuantity - quantityChange)
+        }
+
+        // 2. Update product
+        const { error: updateError } = await supabase
+            .from('products')
+            .update({
+                quantity: newQuantity,
+                damaged_quantity: newDamagedQuantity,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', productId)
+
+        if (updateError) throw new Error(updateError.message)
+
+        // 3. Log transaction
+        const { error: logError } = await supabase
+            .from('inventory_logs')
+            .insert({
+                product_id: productId,
+                transaction_type: type,
+                quantity_change: quantityChange,
+                old_shelf_id: product.shelf_id,
+                new_shelf_id: product.shelf_id,
+                note: fromMainStock ? 'Sağlam stoktan hasarlıya aktarıldı' : null
+            })
+
+        if (logError) console.error('Error logging damaged transaction:', logError)
+
+        revalidatePath('/inventory')
+        revalidatePath('/low-stock')
+        revalidatePath('/')
+        return { success: true, newQuantity, newDamagedQuantity }
+    } catch (error: any) {
+        console.error('Update damaged stock error:', error)
+        return { error: error.message || 'Hata oluştu.' }
+    }
+}
+
 export async function updateProductMinStock(productId: string, minStock: number) {
     try {
         const { error } = await supabase

@@ -20,7 +20,9 @@ import {
     ArrowDownLeft,
     ArrowUpRight,
     ChevronDown,
-    ChevronRight as ChevronRightIcon
+    ChevronRight as ChevronRightIcon,
+    ShieldX,
+    Trash2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useEffect } from 'react'
@@ -35,7 +37,7 @@ export default function AppShell({ children }: AppShellProps) {
     const pathname = usePathname()
 
     // Auto-open stock menu if we are on a stock page
-    const stockHrefs = ['/stock-in', '/stock-out', '/inventory', '/low-stock', '/products/new', '/trendyol/limits']
+    const stockHrefs = ['/stock-in', '/stock-out', '/inventory', '/low-stock', '/products/new', '/trendyol/limits', '/damaged-in', '/damaged-out']
     const isCurrentlyOnStockPage = stockHrefs.includes(pathname)
 
     useEffect(() => {
@@ -53,6 +55,8 @@ export default function AppShell({ children }: AppShellProps) {
         { name: 'Stok Giriş', href: '/stock-in', icon: ArrowDownLeft },
         { name: 'Stok Çıkış', href: '/stock-out', icon: ArrowUpRight },
         { name: 'Kritik Stoklar', href: '/low-stock', icon: AlertTriangle },
+        { name: 'Hasarlı Giriş', href: '/damaged-in', icon: ShieldX },
+        { name: 'Hasarlı Çıkış', href: '/damaged-out', icon: Trash2 },
         { name: 'Trendyol Limitler', href: '/trendyol/limits', icon: ShoppingBag },
         { name: 'Yeni Ürün', href: '/products/new', icon: PlusCircle },
     ]

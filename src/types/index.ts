@@ -17,6 +17,7 @@ export type Product = {
     barcode: string
     description: string | null
     quantity: number
+    damaged_quantity: number
     min_stock: number
     shelf_id: string | null
     category_id: string | null
@@ -30,7 +31,7 @@ export type Product = {
 export type InventoryLog = {
     id: string
     product_id: string
-    transaction_type: 'STOCK_IN' | 'STOCK_OUT' | 'MOVE' | 'AUDIT' | 'ADJUST'
+    transaction_type: 'STOCK_IN' | 'STOCK_OUT' | 'MOVE' | 'AUDIT' | 'ADJUST' | 'DAMAGED_IN' | 'DAMAGED_OUT'
     quantity_change: number
     old_shelf_id: string | null
     new_shelf_id: string | null

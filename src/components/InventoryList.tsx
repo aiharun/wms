@@ -6,6 +6,7 @@ import { Search, SlidersHorizontal, AlertTriangle, Package, MapPin, RefreshCcw, 
 import { syncTrendyolProducts } from '@/lib/actions'
 import { useRouter } from 'next/navigation'
 import MinStockEditor from './MinStockEditor'
+import { cn } from '@/lib/utils'
 
 interface InventoryListProps {
     products: Product[]
@@ -162,6 +163,13 @@ export default function InventoryList({ products, shelves }: InventoryListProps)
                                         )}
                                         {product.quantity}
                                     </div>
+                                    {product.damaged_quantity > 0 && (
+                                        <div className="mt-1">
+                                            <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-100 whitespace-nowrap">
+                                                {product.damaged_quantity} Hasarlı
+                                            </span>
+                                        </div>
+                                    )}
                                 </td>
                             </tr>
                         ))}
@@ -207,13 +215,22 @@ export default function InventoryList({ products, shelves }: InventoryListProps)
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-zinc-50">
+                            <div className="grid grid-cols-3 gap-3 pt-3 border-t border-zinc-50">
                                 <div>
                                     <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1">Kritik Limit</p>
                                     <MinStockEditor productId={product.id} initialMinStock={product.min_stock} />
                                 </div>
+                                <div className="text-center">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1">Hasarlı</p>
+                                    <span className={cn(
+                                        "inline-block px-2 py-1 rounded-lg text-xs font-bold",
+                                        product.damaged_quantity > 0 ? "bg-amber-100 text-amber-700" : "bg-zinc-100 text-zinc-400"
+                                    )}>
+                                        {product.damaged_quantity || 0}
+                                    </span>
+                                </div>
                                 <div className="text-right">
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1">Mevcut Stok</p>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1">Stok</p>
                                     <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-sm ${product.quantity <= product.min_stock
                                         ? 'bg-rose-100 text-rose-700'
                                         : 'bg-emerald-100 text-emerald-700'

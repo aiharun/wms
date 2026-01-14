@@ -23,6 +23,7 @@ create table products (
   barcode text not null unique,
   description text,
   quantity integer default 0 check (quantity >= 0),
+  damaged_quantity integer default 0 check (damaged_quantity >= 0),
   min_stock integer default 10,
   shelf_id uuid references shelves(id) on delete set null,
   category_id uuid references categories(id) on delete set null,
@@ -35,7 +36,7 @@ create table products (
 DO $$ 
 BEGIN 
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'transaction_type') THEN 
-        CREATE TYPE transaction_type AS ENUM ('STOCK_IN', 'STOCK_OUT', 'MOVE', 'AUDIT', 'ADJUST');
+        CREATE TYPE transaction_type AS ENUM ('STOCK_IN', 'STOCK_OUT', 'MOVE', 'AUDIT', 'ADJUST', 'DAMAGED_IN', 'DAMAGED_OUT');
     END IF;
 END $$;
 
