@@ -370,6 +370,7 @@ export async function updateDamagedStock(
 ) {
     try {
         // 1. Get current product
+        console.log('[updateDamagedStock] Querying product ID:', productId)
         const { data: product, error: fetchError } = await supabase
             .from('products')
             .select('id, quantity, damaged_quantity, shelf_id')
@@ -377,8 +378,12 @@ export async function updateDamagedStock(
             .single()
 
         if (fetchError || !product) {
-            console.error('Damaged stock fetch error:', fetchError)
-            throw new Error(`Ürün bulunamadı (ID: ${productId}). Lütfen barkodu tekrar tarayın.`)
+            console.error('[updateDamagedStock] Fetch error details:', {
+                error: fetchError,
+                productId,
+                found: !!product
+            })
+            throw new Error(`Ürün veritabanında bulunamadı (ID: ${productId}). Hata: ${fetchError?.message || 'Kayıt yok'}`)
         }
 
         let newQuantity = product.quantity
