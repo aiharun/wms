@@ -319,7 +319,7 @@ export async function syncTrendyolProducts() {
                 name: p.title,
                 barcode: p.barcode,
                 quantity: 0,
-                min_stock: 5,
+                min_stock: 10,
                 updated_at: new Date().toISOString()
             }))
 
@@ -335,9 +335,33 @@ export async function syncTrendyolProducts() {
         if (insertError) throw new Error(insertError.message)
 
         revalidatePath('/inventory')
+        revalidatePath('/low-stock')
         return { success: true, count: newProducts.length, message: `${newProducts.length} yeni ürün başarıyla aktarıldı.` }
     } catch (error: any) {
         console.error('Sync error:', error)
         return { error: error.message || 'Senkronizasyon sırasında bir hata oluştu.' }
+    }
+}
+
+export async function updateProductMinStock(productId: string, minStock: number) {
+    try {
+        const { error } = await supabase
+            .from('products')
+            .update({
+                min_stock: minStock,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', productId)
+
+        if (error) throw new Error(error.message)
+
+        revalidatePath('/inventory')
+        revalidatePath('/low-stock')
+        revalidatePath('/')
+
+        return { success: true }
+    } catch (error: any) {
+        console.error('Update min stock error:', error)
+        return { error: error.message || 'Kritik limit güncellenemedi.' }
     }
 }

@@ -2,13 +2,57 @@
 
 import { useState } from 'react'
 import { Product, Shelf } from '@/types'
-import { Search, SlidersHorizontal, AlertTriangle, Package, MapPin, RefreshCcw, CheckCircle2 } from 'lucide-react'
-import { syncTrendyolProducts } from '@/lib/actions'
+import { Search, SlidersHorizontal, AlertTriangle, Package, MapPin, RefreshCcw, CheckCircle2, Save, Loader2 } from 'lucide-react'
+import { syncTrendyolProducts, updateProductMinStock } from '@/lib/actions'
 import { useRouter } from 'next/navigation'
 
 interface InventoryListProps {
     products: Product[]
     shelves: Shelf[]
+}
+
+function MinStockEditor({ productId, initialMinStock }: { productId: string, initialMinStock: number }) {
+    const [minStock, setMinStock] = useState(initialMinStock)
+    const [isSaving, setIsSaving] = useState(false)
+    const [hasChanged, setHasChanged] = useState(false)
+    const router = useRouter()
+
+    const handleSave = async () => {
+        setIsSaving(true)
+        try {
+            await updateProductMinStock(productId, minStock)
+            setHasChanged(false)
+            router.refresh()
+        } catch (error) {
+            console.error('Failed to update min stock:', error)
+        } finally {
+            setIsSaving(false)
+        }
+    }
+
+    return (
+        <div className="flex items-center justify-center gap-2 group/editor">
+            <input
+                type="number"
+                value={minStock}
+                onChange={(e) => {
+                    setMinStock(parseInt(e.target.value) || 0)
+                    setHasChanged(true)
+                }}
+                className="w-16 px-2 py-1 text-center bg-zinc-50 border border-zinc-200 rounded-lg text-sm font-bold focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+            />
+            {hasChanged && (
+                <button
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className="p-1.5 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-all active:scale-95 disabled:opacity-50"
+                    title="Kaydet"
+                >
+                    {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                </button>
+            )}
+        </div>
+    )
 }
 
 export default function InventoryList({ products, shelves }: InventoryListProps) {
@@ -120,6 +164,7 @@ export default function InventoryList({ products, shelves }: InventoryListProps)
                             <th className="px-6 py-4 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Ürün</th>
                             <th className="px-6 py-4 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Barkod</th>
                             <th className="px-6 py-4 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wider">Konum</th>
+                            <th className="px-6 py-4 text-center text-xs font-semibold text-zinc-500 uppercase tracking-wider">Kritik Limit</th>
                             <th className="px-6 py-4 text-right text-xs font-semibold text-zinc-500 uppercase tracking-wider">Stok</th>
                         </tr>
                     </thead>
@@ -147,6 +192,9 @@ export default function InventoryList({ products, shelves }: InventoryListProps)
                                         {product.shelves?.code || 'Belirsiz'}
                                     </span>
                                 </td>
+                                <td className="px-6 py-4 text-center">
+                                    <MinStockEditor productId={product.id} initialMinStock={product.min_stock} />
+                                </td>
                                 <td className="px-6 py-4 text-right">
                                     <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold ${product.quantity <= product.min_stock
                                         ? 'bg-rose-100 text-rose-700'
@@ -162,7 +210,7 @@ export default function InventoryList({ products, shelves }: InventoryListProps)
                         ))}
                         {filteredProducts.length === 0 && (
                             <tr>
-                                <td colSpan={4} className="px-6 py-12 text-center">
+                                <td colSpan={5} className="px-6 py-12 text-center">
                                     <Package className="w-12 h-12 text-zinc-200 mx-auto mb-3" />
                                     <p className="text-zinc-500">Ürün bulunamadı</p>
                                 </td>
@@ -186,8 +234,8 @@ export default function InventoryList({ products, shelves }: InventoryListProps)
                             className="bg-white p-4 rounded-2xl border border-zinc-100 shadow-sm"
                         >
                             <div className="flex items-start justify-between gap-3 mb-3">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center">
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center shrink-0">
                                         <Package className="w-5 h-5 text-indigo-600" />
                                     </div>
                                     <div className="flex-1 min-w-0">
@@ -195,23 +243,29 @@ export default function InventoryList({ products, shelves }: InventoryListProps)
                                         <p className="text-sm text-zinc-600 font-bold font-mono mt-0.5">{product.barcode}</p>
                                     </div>
                                 </div>
-                                <span className="px-2.5 py-1 bg-zinc-100 text-zinc-600 rounded-lg text-sm font-medium">
-                                    {product.shelves?.code || '-'}
-                                </span>
+                                <div className="text-right shrink-0">
+                                    <span className="px-2.5 py-1 bg-zinc-100 text-zinc-600 rounded-lg text-xs font-bold block mb-2 font-mono">
+                                        {product.shelves?.code || '-'}
+                                    </span>
+                                </div>
                             </div>
 
-                            <div className="flex items-center justify-between pt-3 border-t border-zinc-100">
-                                <span className="text-sm text-zinc-400">
-                                    {product.categories?.name || 'Genel'}
-                                </span>
-                                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold ${product.quantity <= product.min_stock
-                                    ? 'bg-rose-100 text-rose-700'
-                                    : 'bg-emerald-100 text-emerald-700'
-                                    }`}>
-                                    {product.quantity <= product.min_stock && (
-                                        <AlertTriangle className="w-3.5 h-3.5" />
-                                    )}
-                                    {product.quantity} adet
+                            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-zinc-50">
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1">Kritik Limit</p>
+                                    <MinStockEditor productId={product.id} initialMinStock={product.min_stock} />
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1">Mevcut Stok</p>
+                                    <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-sm ${product.quantity <= product.min_stock
+                                        ? 'bg-rose-100 text-rose-700'
+                                        : 'bg-emerald-100 text-emerald-700'
+                                        }`}>
+                                        {product.quantity <= product.min_stock && (
+                                            <AlertTriangle className="w-3.5 h-3.5" />
+                                        )}
+                                        {product.quantity}
+                                    </div>
                                 </div>
                             </div>
                         </div>

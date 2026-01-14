@@ -23,7 +23,7 @@ create table products (
   barcode text not null unique,
   description text,
   quantity integer default 0 check (quantity >= 0),
-  min_stock integer default 5,
+  min_stock integer default 10,
   shelf_id uuid references shelves(id) on delete set null,
   category_id uuid references categories(id) on delete set null,
   image_url text,
