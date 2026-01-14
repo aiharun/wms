@@ -357,6 +357,7 @@ export async function updateProductMinStock(productId: string, minStock: number)
 
         revalidatePath('/inventory')
         revalidatePath('/low-stock')
+        revalidatePath('/trendyol/limits')
         revalidatePath('/')
 
         return { success: true }
