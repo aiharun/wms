@@ -293,3 +293,51 @@ export async function fetchTrendyolProducts() {
         return { error: error.message || 'Trendyol ürünleri çekilemedi.' }
     }
 }
+export async function syncTrendyolProducts() {
+    try {
+        // 1. Fetch products from Trendyol
+        const result = await fetchTrendyolProducts()
+        if (result.error) throw new Error(result.error)
+        const trendyolProducts = result.products || []
+
+        if (trendyolProducts.length === 0) {
+            return { success: true, count: 0, message: 'Aktarılacak ürün bulunamadı.' }
+        }
+
+        // 2. Fetch current local products to avoid duplicates
+        const { data: localProducts, error: fetchError } = await supabase
+            .from('products')
+            .select('barcode')
+
+        if (fetchError) throw new Error(fetchError.message)
+        const localBarcodes = new Set(localProducts?.map(p => p.barcode) || [])
+
+        // 3. Filter products that don't exist locally
+        const newProducts = trendyolProducts
+            .filter((p: any) => !localBarcodes.has(p.barcode))
+            .map((p: any) => ({
+                name: p.title,
+                barcode: p.barcode,
+                quantity: 0,
+                min_stock: 5,
+                updated_at: new Date().toISOString()
+            }))
+
+        if (newProducts.length === 0) {
+            return { success: true, count: 0, message: 'Tüm ürünler zaten yerel stokta mevcut.' }
+        }
+
+        // 4. Batch insert new products
+        const { error: insertError } = await supabase
+            .from('products')
+            .insert(newProducts)
+
+        if (insertError) throw new Error(insertError.message)
+
+        revalidatePath('/inventory')
+        return { success: true, count: newProducts.length, message: `${newProducts.length} yeni ürün başarıyla aktarıldı.` }
+    } catch (error: any) {
+        console.error('Sync error:', error)
+        return { error: error.message || 'Senkronizasyon sırasında bir hata oluştu.' }
+    }
+}
