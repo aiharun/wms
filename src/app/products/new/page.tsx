@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { createProduct } from '@/lib/actions'
-import { Save, ArrowLeft, Package } from 'lucide-react'
+import { createProduct, getShelves } from '@/lib/actions'
+import { Shelf } from '@/types'
+import { Save, ArrowLeft, Package, MapPin } from 'lucide-react'
 import Link from 'next/link'
 
 function NewProductForm() {
@@ -11,15 +12,21 @@ function NewProductForm() {
     const searchParams = useSearchParams()
     const initialBarcode = searchParams.get('barcode') || ''
 
+    const [shelves, setShelves] = useState<Shelf[]>([])
     const [formData, setFormData] = useState({
         name: '',
         barcode: initialBarcode,
         description: '',
         min_stock: 5,
-        quantity: 0
+        quantity: 0,
+        shelf_id: ''
     })
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+
+    useEffect(() => {
+        getShelves().then(setShelves)
+    }, [])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -27,7 +34,10 @@ function NewProductForm() {
         setError(null)
 
         try {
-            await createProduct(formData)
+            await createProduct({
+                ...formData,
+                shelf_id: formData.shelf_id || null
+            })
             router.push('/inventory')
         } catch (err: any) {
             setError(err.message || 'Ürün oluşturulamadı.')
@@ -95,6 +105,27 @@ function NewProductForm() {
                             rows={3}
                             className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-zinc-900 resize-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
                         />
+                    </div>
+
+                    {/* Shelf Selection */}
+                    <div>
+                        <label className="block text-sm font-medium text-zinc-700 mb-2">
+                            <span className="flex items-center gap-1.5">
+                                <MapPin className="w-4 h-4 text-zinc-400" />
+                                Raf Konumu (Opsiyonel)
+                            </span>
+                        </label>
+                        <select
+                            value={formData.shelf_id}
+                            onChange={e => setFormData({ ...formData, shelf_id: e.target.value })}
+                            className="w-full px-4 py-3 bg-zinc-50 border border-zinc-200 rounded-xl text-zinc-900 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                        >
+                            <option value="">Raf seçilmedi</option>
+                            {shelves.map(shelf => (
+                                <option key={shelf.id} value={shelf.id}>{shelf.code}</option>
+                            ))}
+                        </select>
+                        <p className="text-xs text-zinc-400 mt-1.5">Daha sonra da atayabilirsiniz</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">

@@ -125,7 +125,7 @@ export default async function Home() {
       )}
 
       {/* Stats & Activity Row */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
         {/* Stats Cards */}
         <div className="xl:col-span-2 grid grid-cols-2 md:grid-cols-3 gap-4">
           <div className="bg-white p-5 rounded-2xl border border-zinc-100 shadow-sm">
@@ -172,10 +172,10 @@ export default async function Home() {
             {logs.slice(0, 5).map((log: any) => (
               <div key={log.id} className="flex items-center gap-3 p-3 rounded-xl bg-zinc-50 hover:bg-zinc-100 transition-colors">
                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${log.transaction_type === 'STOCK_IN'
-                    ? 'bg-emerald-100 text-emerald-600'
-                    : log.transaction_type === 'STOCK_OUT'
-                      ? 'bg-rose-100 text-rose-600'
-                      : 'bg-indigo-100 text-indigo-600'
+                  ? 'bg-emerald-100 text-emerald-600'
+                  : log.transaction_type === 'STOCK_OUT'
+                    ? 'bg-rose-100 text-rose-600'
+                    : 'bg-indigo-100 text-indigo-600'
                   }`}>
                   {log.transaction_type === 'STOCK_IN' ? <ArrowUpRight className="w-4 h-4" /> :
                     log.transaction_type === 'STOCK_OUT' ? <ArrowDownLeft className="w-4 h-4" /> :

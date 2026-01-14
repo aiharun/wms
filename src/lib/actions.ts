@@ -168,7 +168,7 @@ export async function createProduct(data: Partial<Product>) {
             description: data.description,
             min_stock: data.min_stock || 5,
             quantity: data.quantity || 0,
-            // shelf_id and category_id can be added later if UI supports it
+            shelf_id: data.shelf_id || null,
         }])
 
     if (error) throw new Error(error.message)
@@ -190,4 +190,38 @@ export async function createShelf(data: Partial<Shelf>) {
     revalidatePath('/shelves')
     revalidatePath('/audit')
     return { success: true }
+}
+
+export async function deleteShelf(shelfId: string) {
+    // First, unassign products from this shelf
+    await supabase
+        .from('products')
+        .update({ shelf_id: null })
+        .eq('shelf_id', shelfId)
+
+    const { error } = await supabase
+        .from('shelves')
+        .delete()
+        .eq('id', shelfId)
+
+    if (error) throw new Error(error.message)
+
+    revalidatePath('/shelves')
+    revalidatePath('/inventory')
+    return { success: true }
+}
+
+export async function getProductsByShelf(shelfId: string) {
+    const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('shelf_id', shelfId)
+        .order('name')
+
+    if (error) {
+        console.error('Error fetching products by shelf:', error)
+        return []
+    }
+
+    return (data as Product[]) || []
 }

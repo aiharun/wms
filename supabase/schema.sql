@@ -24,8 +24,8 @@ create table products (
   description text,
   quantity integer default 0 check (quantity >= 0),
   min_stock integer default 5,
-  shelf_id uuid references shelves(id),
-  category_id uuid references categories(id),
+  shelf_id uuid references shelves(id) on delete set null,
+  category_id uuid references categories(id) on delete set null,
   image_url text,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
@@ -36,11 +36,11 @@ create type transaction_type as enum ('STOCK_IN', 'STOCK_OUT', 'MOVE', 'AUDIT', 
 
 create table inventory_logs (
   id uuid default uuid_generate_v4() primary key,
-  product_id uuid references products(id) not null,
+  product_id uuid references products(id) on delete cascade not null,
   transaction_type transaction_type not null,
   quantity_change integer default 0,
-  old_shelf_id uuid references shelves(id),
-  new_shelf_id uuid references shelves(id),
+  old_shelf_id uuid references shelves(id) on delete set null,
+  new_shelf_id uuid references shelves(id) on delete set null,
   note text,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
