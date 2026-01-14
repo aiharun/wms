@@ -42,6 +42,7 @@ export default function DamagedInPage() {
             return
         }
 
+        console.log('Sending damaged stock update:', { productId: product.id, amount, type: 'DAMAGED_IN', fromMainStock })
         setLoading(true)
         try {
             const result = await updateDamagedStock(product.id, amount, 'DAMAGED_IN', fromMainStock)

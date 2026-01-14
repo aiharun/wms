@@ -51,64 +51,6 @@ export default function BarcodeScanner({ onScanSuccess, onScanFailure }: Barcode
 
     return (
         <div className="w-full">
-            <style jsx global>{`
-                #reader {
-                    border: none !important;
-                    background: black !important;
-                }
-                #reader video {
-                    object-fit: cover !important;
-                }
-                #reader__scan_region {
-                    background: black !important;
-                }
-                #reader__dashboard {
-                    padding: 20px !important;
-                    background: #f8fafc !important;
-                }
-                #reader__dashboard_section_csr button {
-                    background: #4f46e5 !important;
-                    color: white !important;
-                    border: none !important;
-                    padding: 12px 24px !important;
-                    border-radius: 12px !important;
-                    font-weight: 700 !important;
-                    text-transform: uppercase !important;
-                    letter-spacing: 0.05em !important;
-                    font-size: 12px !important;
-                    cursor: pointer !important;
-                    transition: all 0.2s !important;
-                    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2) !important;
-                }
-                #reader__dashboard_section_csr button:hover {
-                    background: #4338ca !important;
-                    transform: translateY(-1px) !important;
-                }
-                #reader__dashboard_section_swaplink {
-                    padding: 15px !important;
-                    text-align: center !important;
-                    color: #64748b !important;
-                    font-size: 13px !important;
-                    font-weight: 600 !important;
-                    text-decoration: underline !important;
-                }
-                #reader img {
-                    display: none !important;
-                }
-                .html5-qrcode-element {
-                    font-family: inherit !important;
-                }
-                @keyframes scan-line {
-                    0% { transform: translateY(-120px); opacity: 0; }
-                    20% { opacity: 1; }
-                    80% { opacity: 1; }
-                    100% { transform: translateY(120px); opacity: 0; }
-                }
-                .animate-scan-line {
-                    animation: scan-line 2s ease-in-out infinite;
-                }
-            `}</style>
-
             {!isScanning && (
                 <div className="space-y-4">
                     {scanResult && (
