@@ -41,6 +41,25 @@ export async function getLowStockCount() {
     return data?.filter(p => p.quantity <= p.min_stock).length || 0
 }
 
+export async function getDamagedProducts() {
+    const { data, error } = await supabase
+        .from('products')
+        .select(`
+            *,
+            shelves (code),
+            categories (name)
+        `)
+        .gt('damaged_quantity', 0)
+        .order('updated_at', { ascending: false })
+
+    if (error) {
+        console.error('Fetch damaged products error:', error)
+        return []
+    }
+
+    return data as Product[]
+}
+
 export async function getLowStockProducts() {
     const { data, error } = await supabase
         .from('products')

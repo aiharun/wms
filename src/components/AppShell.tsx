@@ -37,7 +37,7 @@ export default function AppShell({ children }: AppShellProps) {
     const pathname = usePathname()
 
     // Auto-open stock menu if we are on a stock page
-    const stockHrefs = ['/stock-in', '/stock-out', '/inventory', '/low-stock', '/products/new', '/trendyol/limits', '/damaged-in', '/damaged-out']
+    const stockHrefs = ['/stock-in', '/stock-out', '/inventory', '/low-stock', '/products/new', '/trendyol/limits', '/damaged-in', '/damaged-out', '/damaged-stock']
     const isCurrentlyOnStockPage = stockHrefs.includes(pathname)
 
     useEffect(() => {
@@ -55,6 +55,7 @@ export default function AppShell({ children }: AppShellProps) {
         { name: 'Stok Giriş', href: '/stock-in', icon: ArrowDownLeft },
         { name: 'Stok Çıkış', href: '/stock-out', icon: ArrowUpRight },
         { name: 'Kritik Stoklar', href: '/low-stock', icon: AlertTriangle },
+        { name: 'Hasarlı Ürünler', href: '/damaged-stock', icon: Trash2 },
         { name: 'Hasarlı Giriş', href: '/damaged-in', icon: ShieldX },
         { name: 'Hasarlı Çıkış', href: '/damaged-out', icon: Trash2 },
         { name: 'Trendyol Limitler', href: '/trendyol/limits', icon: ShoppingBag },
