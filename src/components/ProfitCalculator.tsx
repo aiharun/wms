@@ -40,6 +40,7 @@ export default function ProfitCalculator() {
         netVat: 0,
         commissionAmount: 0,
         extraCommissionAmount: 0,
+        extraCommissionVat: 0,
         netProfit: 0,
         roi: 0,
         margin: 0
@@ -81,16 +82,18 @@ export default function ProfitCalculator() {
         const saleExcl = calculatedPriceIncl / vatFactor
         const commAmount = calculatedPriceIncl * commRatio
         const commExcl = commAmount / vatFactor
-        const extraCommAmount = saleExcl * extraCommRatio
+        const extraCommAmount = calculatedPriceIncl * extraCommRatio
+        const extraCommExcl = extraCommAmount / vatFactor
 
-        const netProfit = saleExcl - costExcl - shippingExcl - commExcl - extraCommAmount
+        const netProfit = saleExcl - costExcl - shippingExcl - commExcl - extraCommExcl
 
         // VAT Components
         const saleVat = calculatedPriceIncl - saleExcl
         const costVat = cost - costExcl
         const shippingVat = shipping - shippingExcl
         const commVat = commAmount - commExcl
-        const netVat = saleVat - (costVat + shippingVat + commVat)
+        const extraCommVat = extraCommAmount - extraCommExcl
+        const netVat = saleVat - (costVat + shippingVat + commVat + extraCommVat)
 
         setBreakdown({
             salePrice: calculatedPriceIncl,
@@ -101,6 +104,7 @@ export default function ProfitCalculator() {
             netVat,
             commissionAmount: commAmount,
             extraCommissionAmount: extraCommAmount,
+            extraCommissionVat: extraCommVat,
             netProfit,
             roi: costExcl > 0 ? (netProfit / costExcl) * 100 : 0,
             margin: saleExcl > 0 ? (netProfit / saleExcl) * 100 : 0
@@ -286,9 +290,23 @@ export default function ProfitCalculator() {
                         </select>
                         <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                     </div>
-                    <div className="pt-2">
+                    <div className="grid grid-cols-2 gap-3 pt-2">
                         <div className="space-y-1.5">
-                            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight pl-1">Pazaryeri Komisyonu (%)</span>
+                            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight pl-1">Kategori Komisyonu (%)</span>
+                            <div className="relative">
+                                <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                                    <Percent className="w-3 h-3 text-zinc-300" />
+                                </div>
+                                <input
+                                    type="number"
+                                    value={commission || ''}
+                                    onChange={(e) => setCommission(parseFloat(e.target.value) || 0)}
+                                    className="w-full pl-8 pr-3 py-2.5 bg-zinc-50 border border-zinc-100 rounded-xl text-xs font-bold text-zinc-600 focus:outline-none focus:border-zinc-200"
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-1.5">
+                            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight pl-1">Ek Komisyon (%)</span>
                             <div className="relative">
                                 <div className="absolute left-3 top-1/2 -translate-y-1/2">
                                     <Percent className="w-3 h-3 text-zinc-300" />
@@ -346,8 +364,8 @@ export default function ProfitCalculator() {
                                 <p className="text-sm font-bold text-zinc-900 group-hover:text-emerald-600 transition-colors">₺{formatCurrency(breakdown.netProfit)}</p>
                             </div>
                             <div className="text-center group">
-                                <p className="text-[10px] font-black text-amber-500 uppercase tracking-tight mb-1">KOMİSYON</p>
-                                <p className="text-sm font-bold text-zinc-900 group-hover:text-amber-600 transition-colors">₺{formatCurrency(breakdown.commissionAmount)}</p>
+                                <p className="text-[10px] font-black text-amber-500 uppercase tracking-tight mb-1">TOPLAM KOMİSYON</p>
+                                <p className="text-sm font-bold text-zinc-900 group-hover:text-amber-600 transition-colors">₺{formatCurrency(breakdown.commissionAmount + breakdown.extraCommissionAmount)}</p>
                             </div>
                             <div className="text-center group">
                                 <p className="text-[10px] font-black text-blue-500 uppercase tracking-tight mb-1">NET KDV</p>
@@ -403,7 +421,7 @@ export default function ProfitCalculator() {
                             </div>
                             <div className="flex flex-col gap-1">
                                 <p className="text-[10px] font-black text-sky-600/60 uppercase tracking-widest pl-0.5">Komisyondan</p>
-                                <p className="text-2xl font-black text-zinc-900 leading-none">₺{formatCurrency(breakdown.commissionVat)}</p>
+                                <p className="text-2xl font-black text-zinc-900 leading-none">₺{formatCurrency(breakdown.commissionVat + breakdown.extraCommissionVat)}</p>
                             </div>
                             <div className="ml-auto flex items-center gap-6">
                                 <ChevronRight className="w-8 h-8 text-sky-300" />
