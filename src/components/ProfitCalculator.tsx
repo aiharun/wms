@@ -39,44 +39,34 @@ export default function ProfitCalculator() {
         saleVat: 0,
         netVat: 0,
         commissionAmount: 0,
-        serviceFeeAmount: 0,
-        intlServiceFeeAmount: 0,
-        serviceFeeVat: 0,
-        intlServiceFeeVat: 0,
-        stopajAmount: 0,
         netProfit: 0,
         roi: 0,
         margin: 0
     })
     const [isCalculated, setIsCalculated] = useState(false)
 
-    // Additional Inputs
-    const [serviceFee, setServiceFee] = useState<number>(10.19)
-    const [intlServiceFee, setIntlServiceFee] = useState<number>(0)
-    const [stopajRate, setStopajRate] = useState<number>(0)
-
     const handleCalculate = () => {
         const commRatio = commission / 100
         const vatVal = vatRate / 100
         const vatFactor = 1 + vatVal
-        const stopajRatio = stopajRate / 100
+
+        const shippingVatVal = 0.20
+        const shippingVatFactor = 1 + shippingVatVal
 
         // Excluded Values
         const costExcl = cost / vatFactor
-        const shippingExcl = shipping / vatFactor
-        const serviceFeeExcl = serviceFee / vatFactor
-        const intlServiceFeeExcl = intlServiceFee / vatFactor
+        const shippingExcl = shipping / shippingVatFactor
 
         let calculatedPriceIncl = 0
         if (profitMode === 'amount') {
-            const numerator = targetProfit + costExcl + shippingExcl + serviceFeeExcl + intlServiceFeeExcl
-            const denominator = 1 - commRatio - stopajRatio
+            const numerator = targetProfit + costExcl + shippingExcl
+            const denominator = 1 - commRatio
             const saleExcl = denominator > 0 ? numerator / denominator : 0
             calculatedPriceIncl = saleExcl * vatFactor
         } else {
             const profitRatio = targetProfit / 100
-            const numerator = costExcl + shippingExcl + serviceFeeExcl + intlServiceFeeExcl
-            const denominator = 1 - commRatio - stopajRatio - profitRatio
+            const numerator = costExcl + shippingExcl
+            const denominator = 1 - commRatio - profitRatio
             const saleExcl = denominator > 0 ? numerator / denominator : 0
             calculatedPriceIncl = saleExcl * vatFactor
         }
@@ -84,33 +74,24 @@ export default function ProfitCalculator() {
         const saleExcl = calculatedPriceIncl / vatFactor
         const commAmount = calculatedPriceIncl * commRatio
         const commExcl = commAmount / vatFactor
-        const stopajAmount = calculatedPriceIncl * stopajRatio
-        const stopajExcl = stopajAmount / vatFactor
 
-        const netProfit = saleExcl - costExcl - shippingExcl - commExcl - stopajExcl - serviceFeeExcl - intlServiceFeeExcl
+        const netProfit = saleExcl - costExcl - shippingExcl - commExcl
 
         // VAT Components
         const saleVat = calculatedPriceIncl - saleExcl
         const costVat = cost - costExcl
         const shippingVat = shipping - shippingExcl
         const commVat = commAmount - commExcl
-        const serviceFeeVat = serviceFee - serviceFeeExcl
-        const intlServiceFeeVat = intlServiceFee - intlServiceFeeExcl
-        const netVat = saleVat - (costVat + shippingVat + commVat + serviceFeeVat + intlServiceFeeVat)
+        const netVat = saleVat - (costVat + shippingVat + commVat)
 
         setBreakdown({
             salePrice: calculatedPriceIncl,
             costVat,
             shippingVat,
             commissionVat: commVat,
-            serviceFeeVat,
-            intlServiceFeeVat,
             saleVat,
             netVat,
             commissionAmount: commAmount,
-            serviceFeeAmount: serviceFee,
-            intlServiceFeeAmount: intlServiceFee,
-            stopajAmount: stopajAmount,
             netProfit,
             roi: costExcl > 0 ? (netProfit / costExcl) * 100 : 0,
             margin: saleExcl > 0 ? (netProfit / saleExcl) * 100 : 0
@@ -121,7 +102,7 @@ export default function ProfitCalculator() {
     // Reset status when inputs change
     useEffect(() => {
         setIsCalculated(false)
-    }, [cost, targetProfit, profitMode, commission, shipping, vatRate, stopajRate, serviceFee, intlServiceFee])
+    }, [cost, targetProfit, profitMode, commission, shipping, vatRate])
 
     const formatCurrency = (val: number) => {
         return new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val)
@@ -312,42 +293,8 @@ export default function ProfitCalculator() {
                                     />
                                 </div>
                             </div>
-                            <div className="space-y-1.5">
-                                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight pl-1">Stopaj (%)</span>
-                                <div className="relative">
-                                    <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                                        <Percent className="w-3 h-3 text-zinc-300" />
-                                    </div>
-                                    <input
-                                        type="number"
-                                        value={stopajRate || ''}
-                                        onChange={(e) => setStopajRate(parseFloat(e.target.value) || 0)}
-                                        className="w-full pl-8 pr-3 py-2.5 bg-zinc-50 border border-zinc-100 rounded-xl text-xs font-bold text-zinc-600 focus:outline-none focus:border-zinc-200"
-                                    />
-                                </div>
-                            </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-1.5">
-                                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight pl-1">Hizmet Bedeli (₺)</span>
-                                <input
-                                    type="number"
-                                    value={serviceFee || ''}
-                                    onChange={(e) => setServiceFee(parseFloat(e.target.value) || 0)}
-                                    className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-100 rounded-xl text-xs font-bold text-zinc-600 focus:outline-none focus:border-zinc-200"
-                                />
-                            </div>
-                            <div className="space-y-1.5">
-                                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight pl-1">Uluslararası (₺)</span>
-                                <input
-                                    type="number"
-                                    value={intlServiceFee || ''}
-                                    onChange={(e) => setIntlServiceFee(parseFloat(e.target.value) || 0)}
-                                    className="w-full px-3 py-2.5 bg-zinc-50 border border-zinc-100 rounded-xl text-xs font-bold text-zinc-600 focus:outline-none focus:border-zinc-200"
-                                />
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -445,16 +392,6 @@ export default function ProfitCalculator() {
                                 <p className="text-[10px] font-black text-sky-600/60 uppercase tracking-widest leading-none">Komisyondan Oluşan</p>
                                 <p className="text-xl font-black text-zinc-900 leading-none">₺{formatCurrency(breakdown.commissionVat)}</p>
                             </div>
-                            <div className="text-sky-200 shrink-0"><Minus className="w-4 h-4" /></div>
-                            <div className="flex flex-col gap-1">
-                                <p className="text-[10px] font-black text-sky-600/60 uppercase tracking-widest leading-none">Hizmet Bedelinden</p>
-                                <p className="text-xl font-black text-zinc-900 leading-none">₺{formatCurrency(breakdown.serviceFeeVat)}</p>
-                            </div>
-                            <div className="text-sky-200 shrink-0"><Minus className="w-4 h-4" /></div>
-                            <div className="flex flex-col gap-1">
-                                <p className="text-[10px] font-black text-sky-600/60 uppercase tracking-widest leading-none">Uluslararası</p>
-                                <p className="text-xl font-black text-zinc-900 leading-none">₺{formatCurrency(breakdown.intlServiceFeeVat)}</p>
-                            </div>
                             <div className="ml-auto flex items-center gap-4 bg-white px-6 py-4 rounded-3xl border border-sky-100 shadow-lg shadow-sky-500/5">
                                 <div className="w-10 h-10 rounded-xl bg-sky-500 flex items-center justify-center text-white shadow-md shadow-sky-500/20"><Box className="w-5 h-5" /></div>
                                 <div>
@@ -476,15 +413,6 @@ export default function ProfitCalculator() {
                                 </div>
                             </div>
 
-                            <div className="bg-sky-50/20 p-6 rounded-[2rem] border border-sky-100/20 flex items-center gap-5 hover:bg-sky-50/40 transition-all group">
-                                <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-sky-500 shadow-md border border-sky-50 group-hover:scale-110 transition-transform">
-                                    <Zap className="w-7 h-7" />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-bold text-sky-600/50 uppercase tracking-widest mb-1.5 leading-none">Hizmet Bedeli</p>
-                                    <p className="text-xl font-black text-zinc-900">₺{formatCurrency(breakdown.serviceFeeAmount)}</p>
-                                </div>
-                            </div>
 
                             <div className="bg-sky-50/20 p-6 rounded-[2rem] border border-sky-100/20 flex items-center gap-5 hover:bg-sky-50/40 transition-all group">
                                 <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-sky-500 shadow-md border border-sky-50 group-hover:scale-110 transition-transform">
@@ -516,25 +444,7 @@ export default function ProfitCalculator() {
                                 </div>
                             </div>
 
-                            <div className="bg-sky-50/20 p-6 rounded-[2rem] border border-sky-100/20 flex items-center gap-5 hover:bg-sky-50/40 transition-all group">
-                                <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-sky-500 shadow-md border border-sky-50 group-hover:scale-110 transition-transform">
-                                    <Minus className="w-7 h-7" />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-bold text-sky-600/50 uppercase tracking-widest mb-1.5 leading-none">Stopaj Kesintisi</p>
-                                    <p className="text-xl font-black text-zinc-900">₺{formatCurrency(breakdown.stopajAmount)}</p>
-                                </div>
-                            </div>
 
-                            <div className="bg-sky-50/20 p-6 rounded-[2rem] border border-sky-100/20 flex items-center gap-5 hover:bg-sky-50/40 transition-all group">
-                                <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-sky-500 shadow-md border border-sky-50 group-hover:scale-110 transition-transform">
-                                    <HelpCircle className="w-7 h-7" />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-bold text-sky-600/50 uppercase tracking-widest mb-1.5 leading-none">Uluslararası Hizmet Bedeli</p>
-                                    <p className="text-xl font-black text-zinc-900">₺{formatCurrency(breakdown.intlServiceFeeAmount)}</p>
-                                </div>
-                            </div>
                         </div>
 
                         {/* Total Profit Bar */}
