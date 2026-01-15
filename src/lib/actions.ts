@@ -477,3 +477,94 @@ export async function updateProductMinStock(productId: string, minStock: number)
         return { error: error.message || 'Kritik limit güncellenemedi.' }
     }
 }
+export async function getTrendyolOrders(status?: string, page: number = 0, size: number = 50) {
+    // 1. Get credentials
+    const settings = await getSettings()
+    const sellerId = settings.find(s => s.key === 'trendyol_seller_id')?.value
+    const apiKey = settings.find(s => s.key === 'trendyol_api_key')?.value
+    const apiSecret = settings.find(s => s.key === 'trendyol_api_secret')?.value
+
+    if (!sellerId || !apiKey || !apiSecret) {
+        return { error: 'Trendyol API bilgileri eksik.' }
+    }
+
+    // 2. Auth header
+    const auth = Buffer.from(`${apiKey}:${apiSecret}`).toString('base64')
+
+    try {
+        let url = `https://api.trendyol.com/integration/order/sellers/${sellerId}/orders?page=${page}&size=${size}&orderByField=OrderDate&orderByDirection=DESC`
+        if (status) {
+            url += `&status=${status}`
+        }
+
+        const response = await fetch(url, {
+            headers: {
+                'Authorization': `Basic ${auth}`,
+                'User-Agent': `${sellerId} - SelfIntegration`
+            }
+        })
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}))
+            throw new Error(errorData.message || `Trendyol Hatası (${response.status})`)
+        }
+
+        const data = await response.json()
+        let orders = data.content || []
+
+        // Manual sort fallback: Newest first based on orderDate
+        orders = orders.sort((a: any, b: any) => {
+            const dateA = new Date(a.orderDate).getTime()
+            const dateB = new Date(b.orderDate).getTime()
+            return dateB - dateA
+        })
+
+        return {
+            success: true,
+            orders,
+            totalElements: data.totalElements || 0,
+            totalPages: data.totalPages || 0,
+            page: data.page || 0,
+            size: data.size || 50
+        }
+    } catch (error: any) {
+        console.error('Fetch Trendyol orders error:', error)
+        return { error: error.message || 'Siparişler çekilemedi.' }
+    }
+}
+
+export async function getTrendyolOrderDetail(orderNumber: string) {
+    const settings = await getSettings()
+    const sellerId = settings.find(s => s.key === 'trendyol_seller_id')?.value
+    const apiKey = settings.find(s => s.key === 'trendyol_api_key')?.value
+    const apiSecret = settings.find(s => s.key === 'trendyol_api_secret')?.value
+
+    if (!sellerId || !apiKey || !apiSecret) {
+        return { error: 'Trendyol API bilgileri eksik.' }
+    }
+
+    const auth = Buffer.from(`${apiKey}:${apiSecret}`).toString('base64')
+
+    try {
+        const url = `https://api.trendyol.com/integration/order/sellers/${sellerId}/orders?orderNumber=${orderNumber}`
+
+        const response = await fetch(url, {
+            headers: {
+                'Authorization': `Basic ${auth}`,
+                'User-Agent': `${sellerId} - SelfIntegration`
+            }
+        })
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}))
+            throw new Error(errorData.message || `Trendyol Hatası (${response.status})`)
+        }
+
+        const data = await response.json()
+        const order = data.content?.[0]
+        return { success: true, order }
+    } catch (error: any) {
+        console.error('Fetch Trendyol order detail error:', error)
+        return { error: error.message || 'Sipariş detayı çekilemedi.' }
+    }
+}

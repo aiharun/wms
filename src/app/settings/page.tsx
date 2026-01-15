@@ -8,6 +8,7 @@ export default function SettingsPage() {
     const [sellerId, setSellerId] = useState('')
     const [apiKey, setApiKey] = useState('')
     const [apiSecret, setApiSecret] = useState('')
+    const [delayThreshold, setDelayThreshold] = useState('3')
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
@@ -21,6 +22,7 @@ export default function SettingsPage() {
         setSellerId(settings.find(s => s.key === 'trendyol_seller_id')?.value || '')
         setApiKey(settings.find(s => s.key === 'trendyol_api_key')?.value || '')
         setApiSecret(settings.find(s => s.key === 'trendyol_api_secret')?.value || '')
+        setDelayThreshold(settings.find(s => s.key === 'shipping_delay_threshold')?.value || '3')
         setLoading(false)
     }
 
@@ -31,6 +33,7 @@ export default function SettingsPage() {
             await updateSettings('trendyol_seller_id', sellerId)
             await updateSettings('trendyol_api_key', apiKey)
             await updateSettings('trendyol_api_secret', apiSecret)
+            await updateSettings('shipping_delay_threshold', delayThreshold)
             setMessage({ type: 'success', text: 'Ayarlar başarıyla kaydedildi.' })
         } catch (error) {
             setMessage({ type: 'error', text: 'Ayarlar kaydedilirken bir hata oluştu.' })
@@ -133,6 +136,20 @@ export default function SettingsPage() {
                                     placeholder="••••••••••••••••"
                                     className="w-full px-5 py-4 bg-zinc-50 border border-zinc-100 rounded-2xl text-zinc-900 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all font-medium"
                                 />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold text-zinc-400 uppercase tracking-widest mb-2 px-1">Kargo Gecikme Sınırı (Gün)</label>
+                            <div className="flex items-center gap-4">
+                                <input
+                                    type="number"
+                                    value={delayThreshold}
+                                    onChange={(e) => setDelayThreshold(e.target.value)}
+                                    placeholder="Örn: 3"
+                                    className="w-32 px-5 py-4 bg-zinc-50 border border-zinc-100 rounded-2xl text-zinc-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium"
+                                />
+                                <p className="text-sm text-zinc-500 font-medium">Bu süreyi aşan paketler "Gecikenler" listesine düşer.</p>
                             </div>
                         </div>
                     </div>
