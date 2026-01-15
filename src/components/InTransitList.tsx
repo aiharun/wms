@@ -31,13 +31,17 @@ export default function InTransitList({ orders: initialOrders, initialThreshold 
         }
     }
 
+    const [viewMode, setViewMode] = useState<'history' | 'tracking'>('history')
+
     const handleViewProcess = async (order: any) => {
         setSelectedOrder(order)
         setIsLoadingDetail(true)
+        setViewMode('history') // Reset to history by default
         try {
             const result = await getTrendyolOrderDetail(order.orderNumber)
             if (result.success && result.order) {
                 setSelectedOrder(result.order)
+                // If it's Trendyol Express, we might want to default to tracking or suggest it
             }
         } catch (err) {
             console.error('Failed to fetch order detail:', err)
@@ -45,6 +49,48 @@ export default function InTransitList({ orders: initialOrders, initialThreshold 
             setIsLoadingDetail(false)
         }
     }
+
+    const getTrackingUrl = (order: any) => {
+        const trackingNumber = order.shipmentPackages?.[0]?.trackingNumber || order.cargoTrackingNumber || order.trackingNumber
+        if (!trackingNumber) return null
+
+        const provider = (order.cargoProviderName || '').toLowerCase()
+
+        // Trendyol Express (TEX)
+        if (provider.includes('trendyol') || provider.includes('tex')) {
+            return `https://kargotakip.trendyol.com/?orderNumber=${trackingNumber}`
+        }
+
+        // Aras Kargo
+        if (provider.includes('aras')) {
+            return `https://kargotakip.araskargo.com.tr/mainpage.aspx?code=${trackingNumber}`
+        }
+
+        // Yurtiçi Kargo
+        if (provider.includes('yurtiçi') || provider.includes('yurtici')) {
+            return `https://www.yurticikargo.com/tr/online-servisler/gonderi-sorgula?code=${trackingNumber}`
+        }
+
+        // MNG Kargo
+        if (provider.includes('mng')) {
+            return `https://kargotakip.mngkargo.com.tr/tracking?id=${trackingNumber}`
+        }
+
+        // Sendeo
+        if (provider.includes('sendeo')) {
+            return `https://sendeo.com.tr/kargo-takip?takipNo=${trackingNumber}`
+        }
+
+        // PTT Kargo
+        if (provider.includes('ptt')) {
+            return `https://gonderitakip.ptt.gov.tr/Track/Main?takipNo=${trackingNumber}`
+        }
+
+        // Generic fallback for others if they are handled by Trendyol's unified tracker
+        return `https://kargotakip.trendyol.com/?orderNumber=${trackingNumber}`
+    }
+
+    const trackingUrl = selectedOrder ? getTrackingUrl(selectedOrder) : null
 
     const parseDate = (dateVal: any) => {
         if (!dateVal) return null
@@ -198,127 +244,162 @@ export default function InTransitList({ orders: initialOrders, initialThreshold 
             {/* Modal */}
             {selectedOrder && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-950/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+                    <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
                         <div className="p-8 border-b border-zinc-50 flex items-center justify-between bg-zinc-50/30">
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30 text-white">
                                     <History className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-black text-zinc-900">Sevkiyat Süreci</h2>
-                                    <p className="text-xs font-bold text-zinc-400 font-mono tracking-wider">PAKET #{selectedOrder.orderNumber}</p>
+                                    <h2 className="text-xl font-black text-zinc-900 line-clamp-1">
+                                        {viewMode === 'history' ? 'Sevkiyat Süreci' : 'Canlı Kargo Takibi'}
+                                    </h2>
+                                    <p className="text-xs font-bold text-zinc-400 font-mono tracking-wider uppercase">PAKET #{selectedOrder.orderNumber}</p>
                                 </div>
                             </div>
-                            <button
-                                onClick={() => setSelectedOrder(null)}
-                                className="w-10 h-10 rounded-full hover:bg-white flex items-center justify-center text-zinc-400 hover:text-rose-500 transition-all border border-transparent hover:border-rose-100 shadow-sm"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
+                            <div className="flex items-center gap-2">
+                                {trackingUrl && (
+                                    <div className="flex bg-zinc-100 p-1 rounded-2xl mr-2">
+                                        <button
+                                            onClick={() => setViewMode('history')}
+                                            className={cn(
+                                                "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                                                viewMode === 'history' ? "bg-white text-blue-600 shadow-sm" : "text-zinc-500 hover:text-zinc-700"
+                                            )}
+                                        >
+                                            Veriler
+                                        </button>
+                                        <button
+                                            onClick={() => setViewMode('tracking')}
+                                            className={cn(
+                                                "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                                                viewMode === 'tracking' ? "bg-white text-blue-600 shadow-sm" : "text-zinc-500 hover:text-zinc-700"
+                                            )}
+                                        >
+                                            Canlı
+                                        </button>
+                                    </div>
+                                )}
+                                <button
+                                    onClick={() => setSelectedOrder(null)}
+                                    className="w-10 h-10 rounded-full hover:bg-white flex items-center justify-center text-zinc-400 hover:text-rose-500 transition-all border border-transparent hover:border-rose-100 shadow-sm"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
                         </div>
 
-                        <div className="p-8 max-h-[60vh] overflow-y-auto custom-scrollbar space-y-8 relative">
+                        <div className="flex-1 overflow-y-auto custom-scrollbar relative min-h-[400px]">
                             {isLoadingDetail && (
-                                <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-[2px] flex items-center justify-center">
+                                <div className="absolute inset-0 z-20 bg-white/60 backdrop-blur-[2px] flex items-center justify-center">
                                     <div className="flex flex-col items-center gap-3">
                                         <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-                                        <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Detaylar Yükleniyor...</p>
+                                        <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Yükleniyor...</p>
                                     </div>
                                 </div>
                             )}
 
-                            {/* Products Section */}
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-2">
-                                    <Package className="w-4 h-4 text-zinc-400" />
-                                    <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Sipariş İçeriği</span>
-                                </div>
-                                <div className="grid gap-3">
-                                    {selectedOrder.lines?.map((line: any, i: number) => (
-                                        <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-zinc-50 border border-zinc-100/50">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-xl bg-white border border-zinc-100 flex items-center justify-center text-zinc-400">
-                                                    <Package className="w-5 h-5" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-xs font-bold text-zinc-900 line-clamp-1">{line.productName}</p>
-                                                    <p className="text-[10px] font-medium text-zinc-400">SKU: {line.merchantSku || line.barcode}</p>
-                                                </div>
-                                            </div>
-                                            <div className="px-3 py-1 bg-white border border-zinc-100 rounded-lg text-xs font-black text-zinc-900">
-                                                {line.quantity} ADET
-                                            </div>
+                            {viewMode === 'history' ? (
+                                <div className="p-8 space-y-8">
+                                    {/* Products Section */}
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2">
+                                            <Package className="w-4 h-4 text-zinc-400" />
+                                            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Sipariş İçeriği</span>
                                         </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* History Section */}
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-2">
-                                    <History className="w-4 h-4 text-zinc-400" />
-                                    <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Sevkiyat Geçmişi</span>
-                                </div>
-                                <div className="relative pl-6 space-y-8 before:absolute before:left-[3px] before:top-2 before:bottom-2 before:w-[2px] before:bg-zinc-100">
-                                    {/* Try direct history (from /shipment-packages) then fallbacks */}
-                                    {(selectedOrder.history || selectedOrder.shipmentPackages?.[0]?.history || selectedOrder.packageHistories || []).length > 0 ? (
-                                        (selectedOrder.history || selectedOrder.shipmentPackages?.[0]?.history || selectedOrder.packageHistories || []).map((h: any, i: number) => (
-                                            <div key={i} className="relative">
-                                                <div className={cn(
-                                                    "absolute -left-[27px] top-1.5 w-3 h-3 rounded-full border-2 border-white",
-                                                    i === 0 ? "bg-blue-500 ring-4 ring-blue-50" : "bg-zinc-200"
-                                                )} />
-                                                <div className="flex flex-col gap-1">
-                                                    <span className={cn(
-                                                        "text-sm font-black uppercase tracking-wide",
-                                                        i === 0 ? "text-blue-600" : "text-zinc-900"
-                                                    )}>
-                                                        {h.status === 'Awaiting' ? 'Beklemede' :
-                                                            h.status === 'Created' || h.status === 'CreatedDate' ? 'Sipariş Oluşturuldu' :
-                                                                h.status === 'Picking' ? 'Toplanıyor' :
-                                                                    h.status === 'Invoiced' ? 'Faturalandı' :
-                                                                        h.status === 'Shipped' ? 'Kargoya Verildi' :
-                                                                            h.status === 'Delivered' ? 'Teslim Edildi' : h.status}
-                                                    </span>
-                                                    <div className="flex items-center gap-2 text-zinc-400">
-                                                        <Clock className="w-3.5 h-3.5" />
-                                                        <span className="text-[11px] font-bold">
-                                                            {formatDateTime(
-                                                                h.assignmentDate ||
-                                                                h.historyDate ||
-                                                                h.creationDate ||
-                                                                h.createdDate ||
-                                                                h.createdDateLong ||
-                                                                h.statusDate ||
-                                                                h.date ||
-                                                                h.timestamp ||
-                                                                h.updatedDate ||
-                                                                h.lastModifiedDate ||
-                                                                h.pointDate
-                                                            )}
-                                                        </span>
+                                        <div className="grid gap-3">
+                                            {selectedOrder.lines?.map((line: any, i: number) => (
+                                                <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-zinc-50 border border-zinc-100/50">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-xl bg-white border border-zinc-100 flex items-center justify-center text-zinc-400">
+                                                            <Package className="w-5 h-5" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-xs font-bold text-zinc-900 line-clamp-1">{line.productName}</p>
+                                                            <p className="text-[10px] font-medium text-zinc-400">SKU: {line.merchantSku || line.barcode}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="px-3 py-1 bg-white border border-zinc-100 rounded-lg text-xs font-black text-zinc-900">
+                                                        {line.quantity} ADET
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <div className="relative">
-                                            <div className="absolute -left-[27px] top-1.5 w-3 h-3 rounded-full border-2 border-white bg-blue-500 ring-4 ring-blue-50" />
-                                            <div className="flex flex-col gap-1">
-                                                <span className="text-sm font-black uppercase tracking-wide text-blue-600">
-                                                    {selectedOrder.status === 'Shipped' ? 'Kargoda' : selectedOrder.status}
-                                                </span>
-                                                <div className="flex items-center gap-2 text-zinc-400">
-                                                    <Clock className="w-3.5 h-3.5" />
-                                                    <span className="text-[11px] font-bold">
-                                                        Son Güncelleme: {formatDateTime(selectedOrder.orderDate)}
-                                                    </span>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* History Section */}
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2">
+                                            <History className="w-4 h-4 text-zinc-400" />
+                                            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Sevkiyat Geçmişi</span>
+                                        </div>
+                                        <div className="relative pl-6 space-y-8 before:absolute before:left-[3px] before:top-2 before:bottom-2 before:w-[2px] before:bg-zinc-100">
+                                            {(selectedOrder.history || selectedOrder.shipmentPackages?.[0]?.history || selectedOrder.packageHistories || []).length > 0 ? (
+                                                (selectedOrder.history || selectedOrder.shipmentPackages?.[0]?.history || selectedOrder.packageHistories || []).map((h: any, i: number) => (
+                                                    <div key={i} className="relative">
+                                                        <div className={cn(
+                                                            "absolute -left-[27px] top-1.5 w-3 h-3 rounded-full border-2 border-white",
+                                                            i === 0 ? "bg-blue-500 ring-4 ring-blue-50" : "bg-zinc-200"
+                                                        )} />
+                                                        <div className="flex flex-col gap-1">
+                                                            <span className={cn(
+                                                                "text-sm font-black uppercase tracking-wide",
+                                                                i === 0 ? "text-blue-600" : "text-zinc-900"
+                                                            )}>
+                                                                {h.status === 'Awaiting' ? 'Beklemede' :
+                                                                    h.status === 'Created' || h.status === 'CreatedDate' ? 'Sipariş Oluşturuldu' :
+                                                                        h.status === 'Picking' ? 'Toplanıyor' :
+                                                                            h.status === 'Invoiced' ? 'Faturalandı' :
+                                                                                h.status === 'Shipped' ? 'Kargoya Verildi' :
+                                                                                    h.status === 'Delivered' ? 'Teslim Edildi' :
+                                                                                        h.description || h.status}
+                                                            </span>
+                                                            <div className="flex items-center gap-2 text-zinc-400">
+                                                                <Clock className="w-3.5 h-3.5" />
+                                                                <span className="text-[11px] font-bold">
+                                                                    {formatDateTime(
+                                                                        h.assignmentDate || h.historyDate || h.creationDate || h.createdDate || h.statusDate || h.date
+                                                                    )}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="relative text-zinc-400 text-xs font-medium italic">
+                                                    Geçmiş verisi bulunamadı.
                                                 </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="w-full h-full min-h-[500px] bg-zinc-50 relative">
+                                    {trackingUrl ? (
+                                        <>
+                                            <iframe
+                                                src={trackingUrl}
+                                                className="w-full h-full min-h-[500px] border-none"
+                                                title="Cargo Tracking"
+                                            />
+                                            <div className="absolute bottom-4 right-4 group">
+                                                <a
+                                                    href={trackingUrl}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur border border-zinc-200 rounded-xl text-[10px] font-black text-zinc-500 uppercase tracking-widest hover:text-blue-600 transition-all shadow-xl"
+                                                >
+                                                    Dış Bağlantıda Aç <ChevronRight className="w-3.5 h-3.5" />
+                                                </a>
                                             </div>
+                                        </>
+                                    ) : (
+                                        <div className="flex items-center justify-center h-full text-zinc-400 text-sm font-bold">
+                                            Takip linki oluşturulamadı.
                                         </div>
                                     )}
                                 </div>
-                            </div>
+                            )}
                         </div>
 
                         <div className="p-8 bg-zinc-50 border-t border-zinc-100 flex items-center justify-between">

@@ -29,24 +29,38 @@ export default function ProfitCalculator() {
 
     // Calculated Sale Price
     const [salePrice, setSalePrice] = useState<number>(0)
+    const [isCalculated, setIsCalculated] = useState(false)
 
-    useEffect(() => {
+    const handleCalculate = () => {
         const commRatio = commission / 100
+        const vatFactor = 1 / (1 + vatRate / 100)
 
         let calculatedPrice = 0
         if (profitMode === 'amount') {
+            // Formula: (Price / (1+VAT)) - (Price * Comm) - Shipping - Cost = TargetProfit
+            // Price * (vatFactor - commRatio) = TargetProfit + Shipping + Cost
+            // Price = (TargetProfit + Shipping + Cost) / (vatFactor - commRatio)
             const numerator = cost + shipping + targetProfit
-            const denominator = 1 - commRatio
+            const denominator = vatFactor - commRatio
             calculatedPrice = denominator > 0 ? numerator / denominator : 0
         } else {
+            // Formula: (Price / (1+VAT)) - (Price * Comm) - Shipping - Cost = Price * TargetRate
+            // Price * (vatFactor - commRatio - (targetProfit/100)) = Shipping + Cost
+            // Price = (Shipping + Cost) / (vatFactor - commRatio - (targetProfit/100))
             const profitRatio = targetProfit / 100
             const numerator = cost + shipping
-            const denominator = 1 - commRatio - profitRatio
+            const denominator = vatFactor - commRatio - profitRatio
             calculatedPrice = denominator > 0 ? numerator / denominator : 0
         }
 
         setSalePrice(calculatedPrice)
-    }, [cost, targetProfit, profitMode, commission, shipping])
+        setIsCalculated(true)
+    }
+
+    // Reset status when inputs change
+    useEffect(() => {
+        setIsCalculated(false)
+    }, [cost, targetProfit, profitMode, commission, shipping, vatRate])
 
     const formatCurrency = (val: number) => {
         return new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(val)
@@ -261,13 +275,19 @@ export default function ProfitCalculator() {
                 {/* Final Price Card */}
                 <div className="bg-white p-8 rounded-[2.5rem] border border-zinc-50 shadow-sm flex flex-col items-center justify-center text-center gap-6">
                     <div className="space-y-1">
-                        <h2 className="text-6xl font-extrabold text-zinc-900 tracking-tight">
+                        <h2 className={cn(
+                            "text-6xl font-extrabold tracking-tight transition-all duration-500",
+                            isCalculated ? "text-zinc-900 scale-100 opacity-100" : "text-zinc-200 scale-95 opacity-50"
+                        )}>
                             ₺{formatCurrency(salePrice)}
                         </h2>
                     </div>
 
-                    <button className="w-full py-5 bg-[#FFB096] hover:bg-[#FF9F81] text-white rounded-2xl text-base font-bold transition-all shadow-lg shadow-rose-100 flex items-center justify-center gap-3 active:scale-[0.98]">
-                        <Zap className="w-5 h-5 fill-current" />
+                    <button
+                        onClick={handleCalculate}
+                        className="w-full py-5 bg-[#FFB096] hover:bg-[#FF9F81] text-white rounded-2xl text-base font-bold transition-all shadow-lg shadow-rose-100 flex items-center justify-center gap-3 active:scale-[0.98]"
+                    >
+                        <Zap className={cn("w-5 h-5", isCalculated ? "fill-white" : "fill-none")} />
                         Fiyat Oluştur
                     </button>
                 </div>
