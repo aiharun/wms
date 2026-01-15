@@ -343,41 +343,45 @@ export default function DeliveredTable({
                                             <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Süreç Takibi</span>
                                         </div>
                                         <div className="relative pl-8 space-y-8 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-zinc-100">
-                                            {(selectedOrder.shipmentPackages?.[0]?.packageHistory || []).length > 0 ? (
-                                                [...(selectedOrder.shipmentPackages[0].packageHistory)].reverse().map((step: any, idx: number) => {
-                                                    const stepDate = parseDate(step.historyDate || step.creationDate || step.createdDate || step.date || step.timestamp)
-                                                    return (
-                                                        <div key={idx} className="relative">
-                                                            <div className={cn(
-                                                                "absolute -left-[29px] top-1 w-6 h-6 rounded-full border-4 border-white flex items-center justify-center",
-                                                                idx === 0 ? "bg-emerald-500 shadow-lg shadow-emerald-500/30" : "bg-zinc-200"
-                                                            )}>
-                                                                {idx === 0 && <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
-                                                            </div>
-                                                            <div className="flex flex-col gap-1">
-                                                                <div className="flex items-center justify-between">
-                                                                    <span className={cn(
-                                                                        "text-sm font-black uppercase tracking-tight",
-                                                                        idx === 0 ? "text-emerald-600" : "text-zinc-600"
-                                                                    )}>
-                                                                        {step.status === 'Awaiting' ? 'Beklemede' : step.status}
-                                                                    </span>
-                                                                    <span className="text-[10px] font-bold text-zinc-400">
-                                                                        {stepDate ? stepDate.toLocaleString('tr-TR') : '---'}
-                                                                    </span>
+                                            {(() => {
+                                                const historyArr = selectedOrder.shipmentPackages?.[0]?.packageHistory || []
+                                                if (historyArr.length > 0) {
+                                                    return historyArr.map((step: any, idx: number) => {
+                                                        const stepDate = parseDate(step.historyDate || step.creationDate || step.createdDate || step.date || step.timestamp)
+                                                        return (
+                                                            <div key={idx} className="relative">
+                                                                <div className={cn(
+                                                                    "absolute -left-[29px] top-1 w-6 h-6 rounded-full border-4 border-white flex items-center justify-center transition-all duration-500",
+                                                                    idx === historyArr.length - 1 ? "bg-emerald-500 shadow-lg shadow-emerald-500/30" : "bg-zinc-200"
+                                                                )}>
+                                                                    {idx === historyArr.length - 1 && <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
                                                                 </div>
-                                                                {step.description && (
-                                                                    <p className="text-xs text-zinc-500 font-medium">{step.description}</p>
-                                                                )}
+                                                                <div className="flex flex-col gap-1">
+                                                                    <div className="flex items-center justify-between">
+                                                                        <span className={cn(
+                                                                            "text-sm font-black uppercase tracking-tight transition-colors duration-500",
+                                                                            idx === historyArr.length - 1 ? "text-emerald-600" : "text-zinc-600"
+                                                                        )}>
+                                                                            {step.status === 'Awaiting' ? 'Beklemede' : step.status}
+                                                                        </span>
+                                                                        <span className="text-[10px] font-bold text-zinc-400">
+                                                                            {stepDate ? stepDate.toLocaleString('tr-TR') : '---'}
+                                                                        </span>
+                                                                    </div>
+                                                                    {step.description && (
+                                                                        <p className="text-xs text-zinc-500 font-medium">{step.description}</p>
+                                                                    )}
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    )
-                                                })
-                                            ) : (
-                                                <div className="py-4 text-center">
-                                                    <p className="text-xs text-zinc-400 font-bold uppercase tracking-widest italic">Henüz süreç geçmişi bulunmuyor</p>
-                                                </div>
-                                            )}
+                                                        )
+                                                    })
+                                                }
+                                                return (
+                                                    <div className="py-4 text-center">
+                                                        <p className="text-xs text-zinc-400 font-bold uppercase tracking-widest italic">Henüz süreç geçmişi bulunmuyor</p>
+                                                    </div>
+                                                )
+                                            })()}
                                         </div>
                                     </div>
                                 </div>

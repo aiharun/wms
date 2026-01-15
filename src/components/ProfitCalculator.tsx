@@ -27,8 +27,13 @@ export default function ProfitCalculator() {
     const [category, setCategory] = useState('')
     const [commission, setCommission] = useState<number>(0)
 
-    // Calculated Sale Price
-    const [salePrice, setSalePrice] = useState<number>(0)
+    // Results Breakdown
+    const [breakdown, setBreakdown] = useState({
+        commissionAmount: 0,
+        vatAmount: 0,
+        netProfit: 0,
+        salePrice: 0
+    })
     const [isCalculated, setIsCalculated] = useState(false)
 
     const handleCalculate = () => {
@@ -37,15 +42,11 @@ export default function ProfitCalculator() {
 
         let calculatedPrice = 0
         if (profitMode === 'amount') {
-            // Formula: (Price / (1+VAT)) - (Price * Comm) - Shipping - Cost = TargetProfit
-            // Price * (vatFactor - commRatio) = TargetProfit + Shipping + Cost
             // Price = (TargetProfit + Shipping + Cost) / (vatFactor - commRatio)
             const numerator = cost + shipping + targetProfit
             const denominator = vatFactor - commRatio
             calculatedPrice = denominator > 0 ? numerator / denominator : 0
         } else {
-            // Formula: (Price / (1+VAT)) - (Price * Comm) - Shipping - Cost = Price * TargetRate
-            // Price * (vatFactor - commRatio - (targetProfit/100)) = Shipping + Cost
             // Price = (Shipping + Cost) / (vatFactor - commRatio - (targetProfit/100))
             const profitRatio = targetProfit / 100
             const numerator = cost + shipping
@@ -53,7 +54,16 @@ export default function ProfitCalculator() {
             calculatedPrice = denominator > 0 ? numerator / denominator : 0
         }
 
-        setSalePrice(calculatedPrice)
+        const commAmount = calculatedPrice * commRatio
+        const vatAmount = calculatedPrice - (calculatedPrice * vatFactor)
+        const netProfit = (calculatedPrice - vatAmount) - commAmount - shipping - cost
+
+        setBreakdown({
+            commissionAmount: commAmount,
+            vatAmount: vatAmount,
+            netProfit: netProfit,
+            salePrice: calculatedPrice
+        })
         setIsCalculated(true)
     }
 
@@ -273,23 +283,45 @@ export default function ProfitCalculator() {
                 </div>
 
                 {/* Final Price Card */}
-                <div className="bg-white p-8 rounded-[2.5rem] border border-zinc-50 shadow-sm flex flex-col items-center justify-center text-center gap-6">
-                    <div className="space-y-1">
+                <div className="bg-white p-8 rounded-[2.5rem] border border-zinc-50 shadow-sm flex flex-col items-center justify-center text-center gap-6 relative overflow-hidden">
+                    <div className="space-y-1 relative z-10">
+                        <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-2 pl-1">ÖNERİLEN SATIŞ FİYATI</p>
                         <h2 className={cn(
                             "text-6xl font-extrabold tracking-tight transition-all duration-500",
                             isCalculated ? "text-zinc-900 scale-100 opacity-100" : "text-zinc-200 scale-95 opacity-50"
                         )}>
-                            ₺{formatCurrency(salePrice)}
+                            ₺{formatCurrency(breakdown.salePrice)}
                         </h2>
                     </div>
 
+                    {isCalculated && (
+                        <div className="w-full grid grid-cols-3 gap-2 py-4 border-y border-zinc-50 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                            <div className="text-center group">
+                                <p className="text-[10px] font-black text-emerald-500 uppercase tracking-tight mb-1">NET KÂR</p>
+                                <p className="text-sm font-bold text-zinc-900 group-hover:text-emerald-600 transition-colors">₺{Math.round(breakdown.netProfit)}</p>
+                            </div>
+                            <div className="text-center group">
+                                <p className="text-[10px] font-black text-amber-500 uppercase tracking-tight mb-1">KOMİSYON</p>
+                                <p className="text-sm font-bold text-zinc-900 group-hover:text-amber-600 transition-colors">₺{Math.round(breakdown.commissionAmount)}</p>
+                            </div>
+                            <div className="text-center group">
+                                <p className="text-[10px] font-black text-blue-500 uppercase tracking-tight mb-1">KDV</p>
+                                <p className="text-sm font-bold text-zinc-900 group-hover:text-blue-600 transition-colors">₺{Math.round(breakdown.vatAmount)}</p>
+                            </div>
+                        </div>
+                    )}
+
                     <button
                         onClick={handleCalculate}
-                        className="w-full py-5 bg-[#FFB096] hover:bg-[#FF9F81] text-white rounded-2xl text-base font-bold transition-all shadow-lg shadow-rose-100 flex items-center justify-center gap-3 active:scale-[0.98]"
+                        className="w-full py-5 bg-[#FFB096] hover:bg-[#FF9F81] text-white rounded-2xl text-base font-bold transition-all shadow-lg shadow-rose-100 flex items-center justify-center gap-3 active:scale-[0.98] relative z-10"
                     >
-                        <Zap className={cn("w-5 h-5", isCalculated ? "fill-white" : "fill-none")} />
-                        Fiyat Oluştur
+                        <Zap className={cn("w-5 h-5 transition-all duration-500", isCalculated ? "fill-white scale-110" : "fill-none")} />
+                        {isCalculated ? 'Fiyatı Güncelle' : 'Fiyat Oluştur'}
                     </button>
+
+                    {!isCalculated && (
+                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-zinc-50/10 to-transparent pointer-events-none" />
+                    )}
                 </div>
             </div>
 

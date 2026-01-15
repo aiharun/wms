@@ -334,42 +334,46 @@ export default function InTransitList({ orders: initialOrders, initialThreshold 
                                             <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Sevkiyat Geçmişi</span>
                                         </div>
                                         <div className="relative pl-6 space-y-8 before:absolute before:left-[3px] before:top-2 before:bottom-2 before:w-[2px] before:bg-zinc-100">
-                                            {(selectedOrder.history || selectedOrder.shipmentPackages?.[0]?.history || selectedOrder.packageHistories || []).length > 0 ? (
-                                                (selectedOrder.history || selectedOrder.shipmentPackages?.[0]?.history || selectedOrder.packageHistories || []).map((h: any, i: number) => (
-                                                    <div key={i} className="relative">
-                                                        <div className={cn(
-                                                            "absolute -left-[27px] top-1.5 w-3 h-3 rounded-full border-2 border-white",
-                                                            i === 0 ? "bg-blue-500 ring-4 ring-blue-50" : "bg-zinc-200"
-                                                        )} />
-                                                        <div className="flex flex-col gap-1">
-                                                            <span className={cn(
-                                                                "text-sm font-black uppercase tracking-wide",
-                                                                i === 0 ? "text-blue-600" : "text-zinc-900"
-                                                            )}>
-                                                                {h.status === 'Awaiting' ? 'Beklemede' :
-                                                                    h.status === 'Created' || h.status === 'CreatedDate' ? 'Sipariş Oluşturuldu' :
-                                                                        h.status === 'Picking' ? 'Toplanıyor' :
-                                                                            h.status === 'Invoiced' ? 'Faturalandı' :
-                                                                                h.status === 'Shipped' ? 'Kargoya Verildi' :
-                                                                                    h.status === 'Delivered' ? 'Teslim Edildi' :
-                                                                                        h.description || h.status}
-                                                            </span>
-                                                            <div className="flex items-center gap-2 text-zinc-400">
-                                                                <Clock className="w-3.5 h-3.5" />
-                                                                <span className="text-[11px] font-bold">
-                                                                    {formatDateTime(
-                                                                        h.assignmentDate || h.historyDate || h.creationDate || h.createdDate || h.statusDate || h.date
-                                                                    )}
+                                            {(() => {
+                                                const historyArr = (selectedOrder.history || selectedOrder.shipmentPackages?.[0]?.history || selectedOrder.packageHistories || [])
+                                                if (historyArr.length > 0) {
+                                                    return historyArr.map((h: any, i: number) => (
+                                                        <div key={i} className="relative">
+                                                            <div className={cn(
+                                                                "absolute -left-[27px] top-1.5 w-3 h-3 rounded-full border-2 border-white transition-all duration-500",
+                                                                i === historyArr.length - 1 ? "bg-blue-600 ring-4 ring-blue-50" : "bg-zinc-200"
+                                                            )} />
+                                                            <div className="flex flex-col gap-1">
+                                                                <span className={cn(
+                                                                    "text-sm font-black uppercase tracking-wide transition-colors duration-500",
+                                                                    i === historyArr.length - 1 ? "text-blue-600" : "text-zinc-900"
+                                                                )}>
+                                                                    {h.status === 'Awaiting' ? 'Beklemede' :
+                                                                        h.status === 'Created' || h.status === 'CreatedDate' ? 'Sipariş Oluşturuldu' :
+                                                                            h.status === 'Picking' ? 'Toplanıyor' :
+                                                                                h.status === 'Invoiced' ? 'Faturalandı' :
+                                                                                    h.status === 'Shipped' ? 'Kargoya Verildi' :
+                                                                                        h.status === 'Delivered' ? 'Teslim Edildi' :
+                                                                                            h.description || h.status}
                                                                 </span>
+                                                                <div className="flex items-center gap-2 text-zinc-400">
+                                                                    <Clock className="w-3.5 h-3.5" />
+                                                                    <span className="text-[11px] font-bold">
+                                                                        {formatDateTime(
+                                                                            h.assignmentDate || h.historyDate || h.creationDate || h.createdDate || h.statusDate || h.date
+                                                                        )}
+                                                                    </span>
+                                                                </div>
                                                             </div>
                                                         </div>
+                                                    ))
+                                                }
+                                                return (
+                                                    <div className="relative text-zinc-400 text-xs font-medium italic">
+                                                        Geçmiş verisi bulunamadı.
                                                     </div>
-                                                ))
-                                            ) : (
-                                                <div className="relative text-zinc-400 text-xs font-medium italic">
-                                                    Geçmiş verisi bulunamadı.
-                                                </div>
-                                            )}
+                                                )
+                                            })()}
                                         </div>
                                     </div>
                                 </div>
