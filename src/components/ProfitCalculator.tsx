@@ -42,6 +42,7 @@ export default function ProfitCalculator() {
         intlServiceFeeAmount: 0,
         serviceFeeVat: 0,
         intlServiceFeeVat: 0,
+        stopajAmount: 0,
         netProfit: 0,
         roi: 0,
         margin: 0
@@ -83,28 +84,30 @@ export default function ProfitCalculator() {
         // CommissionAmount = PriceIncl * CommRatio
         // CommExcl = CommissionAmount / CommVatFactor
 
+        const stopajRatio = 0.01 // 1% Stopaj
+
         if (profitMode === 'amount') {
-            // Formula: SaleExcl - CostExcl - ShippingExcl - (SaleExcl * SaleVatFactor * CommRatio / CommVatFactor) - FeesExcl = TargetProfit
-            // SaleExcl * (1 - (SaleVatFactor * CommRatio / CommVatFactor)) = TargetProfit + CostExcl + ShippingExcl + FeesExcl
-            const denominator = 1 - (saleVatFactor * commRatio / commVatFactor)
+            // Formula: SaleExcl - CostExcl - ShippingExcl - (SaleExcl * SaleVatFactor * CommRatio / CommVatFactor) - FeesExcl - (SaleExcl * StopajRatio) = TargetProfit
+            // SaleExcl * (1 - (SaleVatFactor * CommRatio / CommVatFactor) - StopajRatio) = TargetProfit + CostExcl + ShippingExcl + FeesExcl
+            const denominator = 1 - (saleVatFactor * commRatio / commVatFactor) - stopajRatio
             const numerator = targetProfit + costExcl + shippingExcl + platformFeeExcl + intlFeeExcl
             const saleExcl = denominator > 0 ? numerator / denominator : 0
             calculatedPriceIncl = saleExcl * saleVatFactor
         } else {
-            // Formula: Profit = SaleExcl * ProfitRatio
-            // SaleExcl * (1 - (SaleVatFactor * CommRatio / CommVatFactor) - ProfitRatio) = CostExcl + ShippingExcl + FeesExcl
+            // Formula: SaleExcl * (1 - (SaleVatFactor * CommRatio / CommVatFactor) - StopajRatio - ProfitRatio) = CostExcl + ShippingExcl + FeesExcl
             const profitRatio = targetProfit / 100
-            const denominator = 1 - (saleVatFactor * commRatio / commVatFactor) - profitRatio
+            const denominator = 1 - (saleVatFactor * commRatio / commVatFactor) - stopajRatio - profitRatio
             const numerator = costExcl + shippingExcl + platformFeeExcl + intlFeeExcl
             const saleExcl = denominator > 0 ? numerator / denominator : 0
             calculatedPriceIncl = saleExcl * saleVatFactor
         }
 
         const saleExcl = calculatedPriceIncl / saleVatFactor
+        const stopajAmount = saleExcl * stopajRatio
         const commAmount = calculatedPriceIncl * commRatio
         const commExcl = commAmount / commVatFactor
 
-        const netProfit = saleExcl - costExcl - shippingExcl - commExcl - platformFeeExcl - intlFeeExcl
+        const netProfit = saleExcl - costExcl - shippingExcl - commExcl - platformFeeExcl - intlFeeExcl - stopajAmount
 
         // VAT Components
         const saleVat = calculatedPriceIncl - saleExcl
@@ -127,6 +130,7 @@ export default function ProfitCalculator() {
             commissionAmount: commAmount,
             serviceFeeAmount: platformServiceFeeVal,
             intlServiceFeeAmount: intlServiceFeeVal,
+            stopajAmount,
             netProfit,
             roi: costExcl > 0 ? (netProfit / costExcl) * 100 : 0,
             margin: saleExcl > 0 ? (netProfit / saleExcl) * 100 : 0
@@ -263,29 +267,23 @@ export default function ProfitCalculator() {
                         <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                     </div>
                     <div className="space-y-4 pt-2">
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-1.5">
-                                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight pl-1">Kategori Komisyonu (%)</span>
-                                <div className="relative">
-                                    <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                                        <Percent className="w-3 h-3 text-zinc-300" />
-                                    </div>
-                                    <input
-                                        type="number"
-                                        value={commission || ''}
-                                        onChange={(e) => setCommission(parseFloat(e.target.value) || 0)}
-                                        className="w-full pl-8 pr-3 py-2.5 bg-zinc-50 border border-zinc-100 rounded-xl text-xs font-bold text-zinc-600 focus:outline-none focus:border-zinc-200"
-                                    />
+                        <div className="space-y-1.5">
+                            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight pl-1">Kategori Komisyonu (%)</span>
+                            <div className="relative">
+                                <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                                    <Percent className="w-3 h-3 text-zinc-300" />
                                 </div>
+                                <input
+                                    type="number"
+                                    value={commission || ''}
+                                    onChange={(e) => setCommission(parseFloat(e.target.value) || 0)}
+                                    className="w-full pl-8 pr-3 py-2.5 bg-zinc-50 border border-zinc-100 rounded-xl text-xs font-bold text-zinc-600 focus:outline-none focus:border-zinc-200"
+                                />
                             </div>
                         </div>
-
                     </div>
                 </div>
-            </div>
 
-            {/* Column 3: Kargo & Result Button */}
-            <div className="space-y-8">
                 {/* Kargo Ücreti Card */}
                 <div className="bg-white p-6 rounded-3xl border border-zinc-50 shadow-sm space-y-6">
                     <div className="flex items-center justify-between">
@@ -305,9 +303,13 @@ export default function ProfitCalculator() {
                         />
                     </div>
                 </div>
+            </div>
+
+            {/* Column 3: Result Button */}
+            <div className="space-y-8 h-full">
 
                 {/* Build Price Button Card */}
-                <div className="bg-white p-8 rounded-[2.5rem] border border-zinc-50 shadow-sm flex flex-col items-center justify-center text-center gap-6 relative overflow-hidden">
+                <div className="bg-white p-8 rounded-[2.5rem] border border-zinc-50 shadow-sm flex flex-col items-center justify-center text-center gap-6 relative overflow-hidden md:h-full min-h-[360px] md:min-h-[400px]">
                     <div className="space-y-1 relative z-10">
                         <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-2 pl-1">ÖNERİLEN SATIŞ FİYATI</p>
                         <h2 className={cn(
@@ -357,7 +359,7 @@ export default function ProfitCalculator() {
                             <h3 className="text-base font-black text-zinc-900 uppercase tracking-widest">Nasıl Hesapladık?</h3>
                         </div>
 
-                        <div className="bg-sky-50/50 p-6 rounded-[2.5rem] border border-sky-100/50 flex flex-wrap items-center gap-x-6 gap-y-4 shadow-inner overflow-x-auto whitespace-nowrap lg:whitespace-normal">
+                        <div className="bg-sky-50/50 p-6 rounded-[2.5rem] border border-sky-100/50 flex flex-wrap items-center justify-center lg:justify-start gap-x-8 gap-y-6 shadow-inner overflow-x-auto">
                             <div className="flex flex-col gap-1">
                                 <p className="text-[10px] font-black text-sky-600/60 uppercase tracking-widest leading-none">Satıştan Oluşan</p>
                                 <p className="text-xl font-black text-zinc-900 leading-none">₺{formatCurrency(breakdown.saleVat)}</p>
@@ -386,6 +388,11 @@ export default function ProfitCalculator() {
                             <div className="flex flex-col gap-1">
                                 <p className="text-[10px] font-black text-sky-600/60 uppercase tracking-widest leading-none">Uluslararası</p>
                                 <p className="text-xl font-black text-zinc-900 leading-none">₺{formatCurrency(breakdown.intlServiceFeeVat)}</p>
+                            </div>
+                            <div className="text-sky-200 shrink-0"><Minus className="w-4 h-4" /></div>
+                            <div className="flex flex-col gap-1">
+                                <p className="text-[10px] font-black text-sky-600/60 uppercase tracking-widest leading-none">Stopaj (%1)</p>
+                                <p className="text-xl font-black text-zinc-900 leading-none">₺{formatCurrency(breakdown.stopajAmount)}</p>
                             </div>
                             <div className="ml-auto flex items-center gap-4 bg-white px-6 py-4 rounded-3xl border border-sky-100 shadow-lg shadow-sky-500/5">
                                 <div className="w-10 h-10 rounded-xl bg-sky-500 flex items-center justify-center text-white shadow-md shadow-sky-500/20"><Box className="w-5 h-5" /></div>
@@ -416,6 +423,16 @@ export default function ProfitCalculator() {
                                 <div>
                                     <p className="text-[10px] font-bold text-sky-600/50 uppercase tracking-widest mb-1.5 leading-none">Kargo Ücreti</p>
                                     <p className="text-xl font-black text-zinc-900">₺{formatCurrency(shipping)}</p>
+                                </div>
+                            </div>
+
+                            <div className="bg-sky-50/20 p-6 rounded-[2rem] border border-sky-100/20 flex items-center gap-5 hover:bg-sky-50/40 transition-all group">
+                                <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-sky-500 shadow-md border border-sky-50 group-hover:scale-110 transition-transform">
+                                    <Percent className="w-7 h-7" />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-sky-600/50 uppercase tracking-widest mb-1.5 leading-none">Stopaj Kesintisi</p>
+                                    <p className="text-xl font-black text-zinc-900">₺{formatCurrency(breakdown.stopajAmount)}</p>
                                 </div>
                             </div>
 
