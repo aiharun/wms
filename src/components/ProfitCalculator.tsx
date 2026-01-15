@@ -39,7 +39,7 @@ export default function ProfitCalculator() {
         saleVat: 0,
         netVat: 0,
         commissionAmount: 0,
-        stopajAmount: 0,
+        extraCommissionAmount: 0,
         netProfit: 0,
         roi: 0,
         margin: 0
@@ -47,13 +47,13 @@ export default function ProfitCalculator() {
     const [isCalculated, setIsCalculated] = useState(false)
 
     // Additional Inputs
-    const [stopajRate, setStopajRate] = useState<number>(0)
+    const [extraCommissionRate, setExtraCommissionRate] = useState<number>(0)
 
     const handleCalculate = () => {
         const commRatio = commission / 100
         const vatVal = vatRate / 100
         const vatFactor = 1 + vatVal
-        const stopajRatio = stopajRate / 100
+        const extraCommRatio = extraCommissionRate / 100
 
         // Excluded Values
         const costExcl = cost / vatFactor
@@ -66,14 +66,14 @@ export default function ProfitCalculator() {
             // TargetProfit = SaleExcl * (1 - CommRatio - StopajRate) - CostExcl - ShippingExcl
             // SaleExcl = (TargetProfit + CostExcl + ShippingExcl) / (1 - CommRatio - StopajRate)
             const numerator = targetProfit + costExcl + shippingExcl
-            const denominator = 1 - commRatio - stopajRatio
+            const denominator = 1 - commRatio - extraCommRatio
             const saleExcl = denominator > 0 ? numerator / denominator : 0
             calculatedPriceIncl = saleExcl * vatFactor
         } else {
             // TargetProfit = SaleExcl * (TargetProfitRate / 100)
             const profitRatio = targetProfit / 100
             const numerator = costExcl + shippingExcl
-            const denominator = 1 - commRatio - stopajRatio - profitRatio
+            const denominator = 1 - commRatio - extraCommRatio - profitRatio
             const saleExcl = denominator > 0 ? numerator / denominator : 0
             calculatedPriceIncl = saleExcl * vatFactor
         }
@@ -81,9 +81,9 @@ export default function ProfitCalculator() {
         const saleExcl = calculatedPriceIncl / vatFactor
         const commAmount = calculatedPriceIncl * commRatio
         const commExcl = commAmount / vatFactor
-        const stopajAmount = saleExcl * stopajRatio
+        const extraCommAmount = saleExcl * extraCommRatio
 
-        const netProfit = saleExcl - costExcl - shippingExcl - commExcl - stopajAmount
+        const netProfit = saleExcl - costExcl - shippingExcl - commExcl - extraCommAmount
 
         // VAT Components
         const saleVat = calculatedPriceIncl - saleExcl
@@ -100,7 +100,7 @@ export default function ProfitCalculator() {
             saleVat,
             netVat,
             commissionAmount: commAmount,
-            stopajAmount,
+            extraCommissionAmount: extraCommAmount,
             netProfit,
             roi: costExcl > 0 ? (netProfit / costExcl) * 100 : 0,
             margin: saleExcl > 0 ? (netProfit / saleExcl) * 100 : 0
@@ -111,7 +111,7 @@ export default function ProfitCalculator() {
     // Reset status when inputs change
     useEffect(() => {
         setIsCalculated(false)
-    }, [cost, targetProfit, profitMode, commission, shipping, vatRate])
+    }, [cost, targetProfit, profitMode, commission, shipping, vatRate, extraCommissionRate])
 
     const formatCurrency = (val: number) => {
         return new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val)
@@ -288,15 +288,15 @@ export default function ProfitCalculator() {
                     </div>
                     <div className="pt-2">
                         <div className="space-y-1.5">
-                            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight pl-1">Stopaj (%)</span>
+                            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight pl-1">Pazaryeri Komisyonu (%)</span>
                             <div className="relative">
                                 <div className="absolute left-3 top-1/2 -translate-y-1/2">
                                     <Percent className="w-3 h-3 text-zinc-300" />
                                 </div>
                                 <input
                                     type="number"
-                                    value={stopajRate || ''}
-                                    onChange={(e) => setStopajRate(parseFloat(e.target.value) || 0)}
+                                    value={extraCommissionRate || ''}
+                                    onChange={(e) => setExtraCommissionRate(parseFloat(e.target.value) || 0)}
                                     className="w-full pl-8 pr-3 py-2.5 bg-zinc-50 border border-zinc-100 rounded-xl text-xs font-bold text-zinc-600 focus:outline-none focus:border-zinc-200"
                                 />
                             </div>
@@ -466,8 +466,8 @@ export default function ProfitCalculator() {
                                     <Box className="w-7 h-7" />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] font-bold text-sky-600/50 uppercase tracking-widest mb-1.5 leading-none">Stopaj Kesintisi</p>
-                                    <p className="text-xl font-black text-zinc-900">₺{formatCurrency(breakdown.stopajAmount)}</p>
+                                    <p className="text-[10px] font-bold text-sky-600/50 uppercase tracking-widest mb-1.5 leading-none">Ek Komisyon Tutarı</p>
+                                    <p className="text-xl font-black text-zinc-900">₺{formatCurrency(breakdown.extraCommissionAmount)}</p>
                                 </div>
                             </div>
                         </div>
