@@ -9,7 +9,10 @@ import {
     HelpCircle,
     Zap,
     Wallet,
-    Box
+    Box,
+    Minus,
+    Star,
+    ChevronRight
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -29,40 +32,78 @@ export default function ProfitCalculator() {
 
     // Results Breakdown
     const [breakdown, setBreakdown] = useState({
+        salePrice: 0,
+        costVat: 0,
+        shippingVat: 0,
+        commissionVat: 0,
+        saleVat: 0,
+        netVat: 0,
         commissionAmount: 0,
-        vatAmount: 0,
+        stopajAmount: 0,
         netProfit: 0,
-        salePrice: 0
+        roi: 0,
+        margin: 0
     })
     const [isCalculated, setIsCalculated] = useState(false)
 
+    // Additional Inputs
+    const [stopajRate, setStopajRate] = useState<number>(0)
+
     const handleCalculate = () => {
         const commRatio = commission / 100
-        const vatFactor = 1 / (1 + vatRate / 100)
+        const vatVal = vatRate / 100
+        const vatFactor = 1 + vatVal
+        const stopajRatio = stopajRate / 100
 
-        let calculatedPrice = 0
+        // Excluded Values
+        const costExcl = cost / vatFactor
+        const shippingExcl = shipping / vatFactor
+
+        let calculatedPriceIncl = 0
         if (profitMode === 'amount') {
-            // Price = (TargetProfit + Shipping + Cost) / (vatFactor - commRatio)
-            const numerator = cost + shipping + targetProfit
-            const denominator = vatFactor - commRatio
-            calculatedPrice = denominator > 0 ? numerator / denominator : 0
+            // Formula: NetProfit = SaleExcl - CostExcl - ShippingExcl - CommExcl - Stopaj
+            // Stopaj = SaleExcl * StopajRate
+            // TargetProfit = SaleExcl * (1 - CommRatio - StopajRate) - CostExcl - ShippingExcl
+            // SaleExcl = (TargetProfit + CostExcl + ShippingExcl) / (1 - CommRatio - StopajRate)
+            const numerator = targetProfit + costExcl + shippingExcl
+            const denominator = 1 - commRatio - stopajRatio
+            const saleExcl = denominator > 0 ? numerator / denominator : 0
+            calculatedPriceIncl = saleExcl * vatFactor
         } else {
-            // Price = (Shipping + Cost) / (vatFactor - commRatio - (targetProfit/100))
+            // TargetProfit = SaleExcl * (TargetProfitRate / 100)
             const profitRatio = targetProfit / 100
-            const numerator = cost + shipping
-            const denominator = vatFactor - commRatio - profitRatio
-            calculatedPrice = denominator > 0 ? numerator / denominator : 0
+            const numerator = costExcl + shippingExcl
+            const denominator = 1 - commRatio - stopajRatio - profitRatio
+            const saleExcl = denominator > 0 ? numerator / denominator : 0
+            calculatedPriceIncl = saleExcl * vatFactor
         }
 
-        const commAmount = calculatedPrice * commRatio
-        const vatAmount = calculatedPrice - (calculatedPrice * vatFactor)
-        const netProfit = (calculatedPrice - vatAmount) - commAmount - shipping - cost
+        const saleExcl = calculatedPriceIncl / vatFactor
+        const commAmount = calculatedPriceIncl * commRatio
+        const commExcl = commAmount / vatFactor
+        const stopajAmount = saleExcl * stopajRatio
+
+        const netProfit = saleExcl - costExcl - shippingExcl - commExcl - stopajAmount
+
+        // VAT Components
+        const saleVat = calculatedPriceIncl - saleExcl
+        const costVat = cost - costExcl
+        const shippingVat = shipping - shippingExcl
+        const commVat = commAmount - commExcl
+        const netVat = saleVat - (costVat + shippingVat + commVat)
 
         setBreakdown({
+            salePrice: calculatedPriceIncl,
+            costVat,
+            shippingVat,
+            commissionVat: commVat,
+            saleVat,
+            netVat,
             commissionAmount: commAmount,
-            vatAmount: vatAmount,
-            netProfit: netProfit,
-            salePrice: calculatedPrice
+            stopajAmount,
+            netProfit,
+            roi: costExcl > 0 ? (netProfit / costExcl) * 100 : 0,
+            margin: saleExcl > 0 ? (netProfit / saleExcl) * 100 : 0
         })
         setIsCalculated(true)
     }
@@ -73,7 +114,7 @@ export default function ProfitCalculator() {
     }, [cost, targetProfit, profitMode, commission, shipping, vatRate])
 
     const formatCurrency = (val: number) => {
-        return new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(val)
+        return new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val)
     }
 
     const VatOption = ({ value }: { value: number }) => (
@@ -245,22 +286,26 @@ export default function ProfitCalculator() {
                         </select>
                         <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                     </div>
-                    <div className="flex items-center gap-3 pt-2">
-                        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight">Komisyon Oranı:</span>
-                        <div className="flex-1">
-                            <input
-                                type="number"
-                                value={commission || ''}
-                                onChange={(e) => setCommission(parseFloat(e.target.value) || 0)}
-                                placeholder="Özel komisyon oranı"
-                                className="w-full px-4 py-2.5 bg-zinc-50 border border-zinc-100 rounded-xl text-xs font-bold text-zinc-600 focus:outline-none placeholder:text-zinc-400"
-                            />
+                    <div className="pt-2">
+                        <div className="space-y-1.5">
+                            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight pl-1">Stopaj (%)</span>
+                            <div className="relative">
+                                <div className="absolute left-3 top-1/2 -translate-y-1/2">
+                                    <Percent className="w-3 h-3 text-zinc-300" />
+                                </div>
+                                <input
+                                    type="number"
+                                    value={stopajRate || ''}
+                                    onChange={(e) => setStopajRate(parseFloat(e.target.value) || 0)}
+                                    className="w-full pl-8 pr-3 py-2.5 bg-zinc-50 border border-zinc-100 rounded-xl text-xs font-bold text-zinc-600 focus:outline-none focus:border-zinc-200"
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Column 3: Kargo & Result */}
+            {/* Column 3: Kargo & Result Button */}
             <div className="space-y-8">
                 {/* Kargo Ücreti Card */}
                 <div className="bg-white p-6 rounded-3xl border border-zinc-50 shadow-sm space-y-6">
@@ -282,7 +327,7 @@ export default function ProfitCalculator() {
                     </div>
                 </div>
 
-                {/* Final Price Card */}
+                {/* Build Price Button Card */}
                 <div className="bg-white p-8 rounded-[2.5rem] border border-zinc-50 shadow-sm flex flex-col items-center justify-center text-center gap-6 relative overflow-hidden">
                     <div className="space-y-1 relative z-10">
                         <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-2 pl-1">ÖNERİLEN SATIŞ FİYATI</p>
@@ -298,15 +343,15 @@ export default function ProfitCalculator() {
                         <div className="w-full grid grid-cols-3 gap-2 py-4 border-y border-zinc-50 animate-in fade-in slide-in-from-bottom-2 duration-500">
                             <div className="text-center group">
                                 <p className="text-[10px] font-black text-emerald-500 uppercase tracking-tight mb-1">NET KÂR</p>
-                                <p className="text-sm font-bold text-zinc-900 group-hover:text-emerald-600 transition-colors">₺{Math.round(breakdown.netProfit)}</p>
+                                <p className="text-sm font-bold text-zinc-900 group-hover:text-emerald-600 transition-colors">₺{formatCurrency(breakdown.netProfit)}</p>
                             </div>
                             <div className="text-center group">
                                 <p className="text-[10px] font-black text-amber-500 uppercase tracking-tight mb-1">KOMİSYON</p>
-                                <p className="text-sm font-bold text-zinc-900 group-hover:text-amber-600 transition-colors">₺{Math.round(breakdown.commissionAmount)}</p>
+                                <p className="text-sm font-bold text-zinc-900 group-hover:text-amber-600 transition-colors">₺{formatCurrency(breakdown.commissionAmount)}</p>
                             </div>
                             <div className="text-center group">
-                                <p className="text-[10px] font-black text-blue-500 uppercase tracking-tight mb-1">KDV</p>
-                                <p className="text-sm font-bold text-zinc-900 group-hover:text-blue-600 transition-colors">₺{Math.round(breakdown.vatAmount)}</p>
+                                <p className="text-[10px] font-black text-blue-500 uppercase tracking-tight mb-1">NET KDV</p>
+                                <p className="text-sm font-bold text-zinc-900 group-hover:text-blue-600 transition-colors">₺{formatCurrency(breakdown.netVat)}</p>
                             </div>
                         </div>
                     )}
@@ -318,13 +363,143 @@ export default function ProfitCalculator() {
                         <Zap className={cn("w-5 h-5 transition-all duration-500", isCalculated ? "fill-white scale-110" : "fill-none")} />
                         {isCalculated ? 'Fiyatı Güncelle' : 'Fiyat Oluştur'}
                     </button>
-
                     {!isCalculated && (
                         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-zinc-50/10 to-transparent pointer-events-none" />
                     )}
                 </div>
             </div>
 
+            {/* Detailed Results (Below the 3 columns) */}
+            {isCalculated && (
+                <div className="col-span-1 md:col-span-3 space-y-8 mt-12 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-3 pl-2">
+                            <div className="w-1 h-6 bg-sky-500 rounded-full" />
+                            <h3 className="text-base font-black text-zinc-900 uppercase tracking-widest">Nasıl Hesapladık?</h3>
+                        </div>
+
+                        {/* VAT Formula Bar */}
+                        <div className="bg-sky-50/50 p-8 rounded-[3rem] border border-sky-100/50 flex flex-wrap items-center gap-x-8 gap-y-6 shadow-inner">
+                            <div className="flex flex-col gap-1">
+                                <p className="text-[10px] font-black text-sky-600/60 uppercase tracking-widest pl-0.5">Satıştan Oluşan</p>
+                                <p className="text-2xl font-black text-zinc-900 leading-none">₺{formatCurrency(breakdown.saleVat)}</p>
+                            </div>
+                            <div className="text-sky-200">
+                                <Minus className="w-5 h-5" />
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <p className="text-[10px] font-black text-sky-600/60 uppercase tracking-widest pl-0.5">Alıştan Oluşan</p>
+                                <p className="text-2xl font-black text-zinc-900 leading-none">₺{formatCurrency(breakdown.costVat)}</p>
+                            </div>
+                            <div className="text-sky-200">
+                                <Minus className="w-5 h-5" />
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <p className="text-[10px] font-black text-sky-600/60 uppercase tracking-widest pl-0.5">Kargodan Oluşan</p>
+                                <p className="text-2xl font-black text-zinc-900 leading-none">₺{formatCurrency(breakdown.shippingVat)}</p>
+                            </div>
+                            <div className="text-sky-200">
+                                <Minus className="w-5 h-5" />
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <p className="text-[10px] font-black text-sky-600/60 uppercase tracking-widest pl-0.5">Komisyondan</p>
+                                <p className="text-2xl font-black text-zinc-900 leading-none">₺{formatCurrency(breakdown.commissionVat)}</p>
+                            </div>
+                            <div className="ml-auto flex items-center gap-6">
+                                <ChevronRight className="w-8 h-8 text-sky-300" />
+                                <div className="flex items-center gap-4 bg-white px-8 py-5 rounded-[2rem] border border-sky-100 shadow-xl shadow-sky-500/5">
+                                    <div className="w-12 h-12 rounded-2xl bg-sky-500 flex items-center justify-center text-white shadow-lg shadow-sky-500/20">
+                                        <Box className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] font-black text-sky-500 uppercase tracking-widest mb-1 pl-0.5">NET KDV</p>
+                                        <p className="text-3xl font-black text-zinc-900 leading-none">₺{formatCurrency(breakdown.netVat)}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Metrics Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="bg-sky-50/20 p-6 rounded-[2rem] border border-sky-100/20 flex items-center gap-5 hover:bg-sky-50/40 transition-all group">
+                                <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-sky-500 shadow-md border border-sky-50 group-hover:scale-110 transition-transform">
+                                    <Wallet className="w-7 h-7" />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-sky-600/50 uppercase tracking-widest mb-1.5 leading-none">Komisyon Tutarı</p>
+                                    <p className="text-xl font-black text-zinc-900">₺{formatCurrency(breakdown.commissionAmount)}</p>
+                                </div>
+                            </div>
+
+                            <div className="bg-sky-50/20 p-6 rounded-[2rem] border border-sky-100/20 flex items-center gap-5 hover:bg-sky-50/40 transition-all group">
+                                <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-sky-500 shadow-md border border-sky-50 group-hover:scale-110 transition-transform">
+                                    <Truck className="w-7 h-7" />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-sky-600/50 uppercase tracking-widest mb-1.5 leading-none">Kargo Ücreti</p>
+                                    <p className="text-xl font-black text-zinc-900">₺{formatCurrency(shipping)}</p>
+                                </div>
+                            </div>
+
+                            <div className="bg-sky-50/20 p-6 rounded-[2rem] border border-sky-100/20 flex items-center gap-5 hover:bg-sky-50/40 transition-all group">
+                                <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-sky-500 shadow-md border border-sky-50 group-hover:scale-110 transition-transform">
+                                    <Percent className="w-7 h-7" />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-sky-600/50 uppercase tracking-widest mb-1.5 leading-none">Kâr Oranı (ROI)</p>
+                                    <p className="text-xl font-black text-zinc-900">%{breakdown.roi.toFixed(2)}</p>
+                                </div>
+                            </div>
+
+                            <div className="bg-sky-50/20 p-6 rounded-[2rem] border border-sky-100/20 flex items-center gap-5 hover:bg-sky-50/40 transition-all group">
+                                <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-sky-500 shadow-md border border-sky-50 group-hover:scale-110 transition-transform">
+                                    <ShoppingBag className="w-7 h-7" />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-sky-600/50 uppercase tracking-widest mb-1.5 leading-none">Kâr Marjı</p>
+                                    <p className="text-xl font-black text-zinc-900">%{breakdown.margin.toFixed(2)}</p>
+                                </div>
+                            </div>
+
+                            <div className="bg-sky-50/20 p-6 rounded-[2rem] border border-sky-100/20 flex items-center gap-5 hover:bg-sky-50/40 transition-all group">
+                                <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-sky-500 shadow-md border border-sky-50 group-hover:scale-110 transition-transform">
+                                    <Box className="w-7 h-7" />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-sky-600/50 uppercase tracking-widest mb-1.5 leading-none">Stopaj Kesintisi</p>
+                                    <p className="text-xl font-black text-zinc-900">₺{formatCurrency(breakdown.stopajAmount)}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Total Profit Bar */}
+                        <div className="bg-emerald-500 p-10 rounded-[3.5rem] shadow-2xl shadow-emerald-500/30 flex items-center justify-between text-white overflow-hidden relative group">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl pointer-events-none" />
+                            <div className="absolute bottom-0 left-0 w-48 h-48 bg-emerald-400 rounded-full translate-y-1/4 -translate-x-1/4 blur-3xl pointer-events-none" />
+
+                            <div className="flex items-center gap-8 relative z-10">
+                                <div className="w-20 h-20 rounded-3xl bg-white/20 backdrop-blur-md flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform duration-500">
+                                    <Star className="w-10 h-10 fill-white" />
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-sm font-black uppercase tracking-[0.3em] opacity-70">TOPLAM NET KÂR</p>
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-5xl font-black tracking-tight">₺{formatCurrency(breakdown.netProfit)}</span>
+                                        <span className="text-xl font-bold opacity-60">/ Birim</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="hidden lg:flex items-center gap-4 relative z-10">
+                                <div className="px-8 py-5 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 shadow-xl">
+                                    <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1.5">MİNİNUM SATIŞ FİYATI</p>
+                                    <p className="text-3xl font-black">₺{formatCurrency(breakdown.salePrice)}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
