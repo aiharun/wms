@@ -22,7 +22,10 @@ import {
     ChevronDown,
     ChevronRight as ChevronRightIcon,
     ShieldX,
-    Trash2
+    Trash2,
+    Truck,
+    ListFilter,
+    ClipboardPen
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useEffect } from 'react'
@@ -34,17 +37,24 @@ interface AppShellProps {
 export default function AppShell({ children }: AppShellProps) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
     const [isStockOpen, setIsStockOpen] = useState(true)
+    const [isShippingOpen, setIsShippingOpen] = useState(false)
     const pathname = usePathname()
 
     // Auto-open stock menu if we are on a stock page
     const stockHrefs = ['/stock-in', '/stock-out', '/inventory', '/low-stock', '/products/new', '/trendyol/limits', '/damaged-in', '/damaged-out', '/damaged-stock']
     const isCurrentlyOnStockPage = stockHrefs.includes(pathname)
 
+    const shippingHrefs = ['/shipping/list', '/shipping/new']
+    const isCurrentlyOnShippingPage = shippingHrefs.some(href => pathname.startsWith(href))
+
     useEffect(() => {
         if (isCurrentlyOnStockPage) {
             setIsStockOpen(true)
         }
-    }, [pathname, isCurrentlyOnStockPage])
+        if (isCurrentlyOnShippingPage) {
+            setIsShippingOpen(true)
+        }
+    }, [pathname, isCurrentlyOnStockPage, isCurrentlyOnShippingPage])
 
     const mainNavigation = [
         { name: 'Genel Bakış', href: '/', icon: LayoutDashboard },
@@ -60,6 +70,11 @@ export default function AppShell({ children }: AppShellProps) {
         { name: 'Hasarlı Çıkış', href: '/damaged-out', icon: Trash2 },
         { name: 'Trendyol Limitler', href: '/trendyol/limits', icon: ShoppingBag },
         { name: 'Yeni Ürün', href: '/products/new', icon: PlusCircle },
+    ]
+
+    const shippingNavigation = [
+        { name: 'Kargo Listesi', href: '/shipping/list', icon: ListFilter },
+        { name: 'Yeni Kargo', href: '/shipping/new', icon: ClipboardPen },
     ]
 
     const otherNavigation = [
@@ -145,6 +160,35 @@ export default function AppShell({ children }: AppShellProps) {
                         </div>
                     </div>
 
+                    {/* Collapsible Shipping Menu */}
+                    <div className="pt-2">
+                        <button
+                            onClick={() => setIsShippingOpen(!isShippingOpen)}
+                            className={cn(
+                                "group flex items-center justify-between w-full px-4 py-3 rounded-xl transition-all duration-200",
+                                isCurrentlyOnShippingPage ? "text-white" : "text-slate-400 hover:text-white hover:bg-white/5"
+                            )}
+                        >
+                            <div className="flex items-center gap-3">
+                                <Truck className="w-5 h-5" />
+                                <span className="font-bold uppercase tracking-wider text-[11px]">Kargo İşlemleri</span>
+                            </div>
+                            <ChevronDown className={cn(
+                                "w-4 h-4 transition-transform duration-300 opacity-50",
+                                isShippingOpen ? "rotate-0" : "-rotate-90"
+                            )} />
+                        </button>
+
+                        <div className={cn(
+                            "grid transition-all duration-300 ease-in-out",
+                            isShippingOpen ? "grid-rows-[1fr] opacity-100 mt-1" : "grid-rows-[0fr] opacity-0 overflow-hidden"
+                        )}>
+                            <div className="overflow-hidden space-y-1">
+                                {shippingNavigation.map((item) => <NavLink key={item.name} item={item} isSubItem />)}
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="pt-4 pb-2">
                         <div className="px-4 py-2">
                             <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Sistem</span>
@@ -224,6 +268,50 @@ export default function AppShell({ children }: AppShellProps) {
                             )}>
                                 <div className="overflow-hidden space-y-2">
                                     {stockNavigation.map((item) => (
+                                        <Link
+                                            key={item.name}
+                                            href={item.href}
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                            className={cn(
+                                                "flex items-center gap-4 ml-8 px-6 py-4 rounded-2xl transition-all",
+                                                pathname === item.href
+                                                    ? "bg-white/10 text-white"
+                                                    : "text-slate-400 hover:bg-white/5"
+                                            )}
+                                        >
+                                            <item.icon className="w-5 h-5" />
+                                            <span className="font-medium">{item.name}</span>
+                                        </Link>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Mobile Shipping Group */}
+                        <div className="pt-4">
+                            <button
+                                onClick={() => setIsShippingOpen(!isShippingOpen)}
+                                className={cn(
+                                    "flex items-center justify-between w-full px-6 py-4 rounded-2xl transition-all",
+                                    isCurrentlyOnShippingPage ? "text-white" : "text-slate-400"
+                                )}
+                            >
+                                <div className="flex items-center gap-4">
+                                    <Truck className="w-6 h-6" />
+                                    <span className="font-black uppercase tracking-widest text-sm">Kargo İşlemleri</span>
+                                </div>
+                                <ChevronDown className={cn(
+                                    "w-5 h-5 transition-transform duration-300",
+                                    isShippingOpen ? "rotate-0" : "-rotate-90"
+                                )} />
+                            </button>
+
+                            <div className={cn(
+                                "grid transition-all duration-300 ease-in-out",
+                                isShippingOpen ? "grid-rows-[1fr] opacity-100 mt-2" : "grid-rows-[0fr] opacity-0 overflow-hidden"
+                            )}>
+                                <div className="overflow-hidden space-y-2">
+                                    {shippingNavigation.map((item) => (
                                         <Link
                                             key={item.name}
                                             href={item.href}
