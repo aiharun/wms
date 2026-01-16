@@ -12,9 +12,34 @@ import {
     Box,
     Minus,
     Star,
-    ChevronRight
+    ChevronRight,
+    RotateCcw,
+    Calculator,
+    Package
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+
+// Move sub-components and helpers outside to avoid re-creation on every render
+const formatCurrency = (val: number) => {
+    return new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val)
+}
+
+const Toggle = ({ active, onClick, label }: { active: boolean, onClick: () => void, label: string }) => (
+    <label className="flex items-center gap-3 cursor-pointer group">
+        <div className="relative" onClick={onClick}>
+            <div className={cn(
+                "w-10 h-5 rounded-full transition-all duration-300 flex items-center px-1",
+                active ? "bg-zinc-900" : "bg-zinc-200"
+            )}>
+                <div className={cn(
+                    "w-3 h-3 rounded-full bg-white transition-all duration-300 shadow-sm",
+                    active ? "translate-x-5" : "translate-x-0"
+                )} />
+            </div>
+        </div>
+        <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-tight">{label}</span>
+    </label>
+)
 
 export default function ProfitCalculator() {
     // Toggles
@@ -142,28 +167,6 @@ export default function ProfitCalculator() {
     useEffect(() => {
         setIsCalculated(false)
     }, [cost, targetProfit, profitMode, commission, shipping, isMicroExport])
-
-    const formatCurrency = (val: number) => {
-        return new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val)
-    }
-
-
-    const Toggle = ({ active, onClick, label }: { active: boolean, onClick: () => void, label: string }) => (
-        <label className="flex items-center gap-3 cursor-pointer group">
-            <div className="relative" onClick={onClick}>
-                <div className={cn(
-                    "w-10 h-5 rounded-full transition-all duration-300 flex items-center px-1",
-                    active ? "bg-zinc-900" : "bg-zinc-200"
-                )}>
-                    <div className={cn(
-                        "w-3 h-3 rounded-full bg-white transition-all duration-300 shadow-sm",
-                        active ? "translate-x-5" : "translate-x-0"
-                    )} />
-                </div>
-            </div>
-            <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-tight">{label}</span>
-        </label>
-    )
 
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
