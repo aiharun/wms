@@ -13,8 +13,9 @@ export default async function ReturnsPage({ searchParams }: PageProps) {
     const page = parseInt(resolvedParams.page || '0')
     const pageSize = 50
 
-    // Fetch returned orders
-    const result = await getTrendyolOrders('Returned', page, pageSize)
+    // Fetch returned and undelivered orders
+    const result = await getTrendyolOrders(['Returned', 'UnDelivered'], page, pageSize)
+
     const orders = result.orders || []
     const error = result.error
 

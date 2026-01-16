@@ -205,10 +205,15 @@ export default function ReturnsTable({
                                         <td className="px-6 py-4">
                                             <div className={cn(
                                                 "inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest",
-                                                order.status === 'Returned' ? "bg-rose-100 text-rose-600" : "bg-amber-100 text-amber-600"
+                                                order.status === 'Returned' ? "bg-rose-100 text-rose-600" :
+                                                    order.status === 'UnDelivered' ? "bg-amber-100 text-amber-600" :
+                                                        "bg-zinc-100 text-zinc-600"
                                             )}>
-                                                {order.status === 'Returned' ? 'İADE EDİLDİ' : 'TESLİM EDİLEMEDİ'}
+                                                {order.status === 'Returned' ? 'İADE EDİLDİ' :
+                                                    order.status === 'UnDelivered' ? 'TESLİM EDİLEMEDİ' :
+                                                        order.status === 'Cancelled' ? 'İPTAL EDİLDİ' : order.status}
                                             </div>
+
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <span className="text-sm font-black text-zinc-900">{order.totalPrice} TL</span>

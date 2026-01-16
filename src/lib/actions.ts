@@ -477,7 +477,7 @@ export async function updateProductMinStock(productId: string, minStock: number)
         return { error: error.message || 'Kritik limit güncellenemedi.' }
     }
 }
-export async function getTrendyolOrders(status?: string, page: number = 0, size: number = 50) {
+export async function getTrendyolOrders(status?: string | string[], page: number = 0, size: number = 50) {
     // 1. Get credentials
     const settings = await getSettings()
     const sellerId = settings.find(s => s.key === 'trendyol_seller_id')?.value
@@ -493,9 +493,18 @@ export async function getTrendyolOrders(status?: string, page: number = 0, size:
 
     try {
         let url = `https://api.trendyol.com/integration/order/sellers/${sellerId}/orders?page=${page}&size=${size}&orderByField=OrderDate&orderByDirection=DESC`
+
         if (status) {
-            url += `&status=${status}`
+            if (Array.isArray(status)) {
+                // If multiple statuses, append each one
+                status.forEach(s => {
+                    url += `&status=${s}`
+                })
+            } else {
+                url += `&status=${status}`
+            }
         }
+
 
         const response = await fetch(url, {
             headers: {
@@ -568,3 +577,45 @@ export async function getTrendyolOrderDetail(orderNumber: string) {
         return { error: error.message || 'Sipariş detayı çekilemedi.' }
     }
 }
+
+export async function getTrendyolClaims(page: number = 0, size: number = 50) {
+    const settings = await getSettings()
+    const sellerId = settings.find(s => s.key === 'trendyol_seller_id')?.value
+    const apiKey = settings.find(s => s.key === 'trendyol_api_key')?.value
+    const apiSecret = settings.find(s => s.key === 'trendyol_api_secret')?.value
+
+    if (!sellerId || !apiKey || !apiSecret) {
+        return { error: 'Trendyol API bilgileri eksik.' }
+    }
+
+    const auth = Buffer.from(`${apiKey}:${apiSecret}`).toString('base64')
+
+    try {
+        // Fetch claims (returns)
+        const url = `https://api.trendyol.com/integration/claims/sellers/${sellerId}/claims?page=${page}&size=${size}`
+
+        const response = await fetch(url, {
+            headers: {
+                'Authorization': `Basic ${auth}`,
+                'User-Agent': `${sellerId} - SelfIntegration`
+            }
+        })
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}))
+            throw new Error(errorData.message || `Trendyol Hatası (${response.status})`)
+        }
+
+        const data = await response.json()
+        return {
+            success: true,
+            claims: data.content || [],
+            totalElements: data.totalElements || 0,
+            totalPages: data.totalPages || 0
+        }
+    } catch (error: any) {
+        console.error('Fetch Trendyol claims error:', error)
+        return { error: error.message || 'İade talepleri çekilemedi.' }
+    }
+}
+
