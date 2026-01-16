@@ -1,13 +1,14 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import AppShell from '@/components/AppShell'
+import { AuthProvider } from '@/components/AuthContext'
+import AuthWrapper from '@/components/AuthWrapper'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Depo Yönetim Sistemi',
-  description: 'Trendyol satıcıları için profesyonel depo ve stok yönetim paneli',
+  title: 'LiaBlancos - Stok Yönetim Sistemi',
+  description: 'Trendyol satıcıları için profesyonel stok yönetim paneli',
 }
 
 export default function RootLayout({
@@ -18,9 +19,11 @@ export default function RootLayout({
   return (
     <html lang="tr">
       <body className={inter.className}>
-        <AppShell>
-          {children}
-        </AppShell>
+        <AuthProvider>
+          <AuthWrapper>
+            {children}
+          </AuthWrapper>
+        </AuthProvider>
       </body>
     </html>
   )

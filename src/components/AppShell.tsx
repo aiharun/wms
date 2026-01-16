@@ -26,10 +26,12 @@ import {
     Truck,
     Timer,
     RotateCcw,
-    Calculator
+    Calculator,
+    LogOut
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useEffect } from 'react'
+import { useAuth } from '@/components/AuthContext'
 
 interface AppShellProps {
     children: React.ReactNode
@@ -39,6 +41,7 @@ export default function AppShell({ children }: AppShellProps) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
     const [isStockOpen, setIsStockOpen] = useState(false)
     const pathname = usePathname()
+    const { user, logout } = useAuth()
 
     // Auto-open menu if we are on a relevant page
     const stockHrefs = ['/stock-in', '/stock-out', '/inventory', '/low-stock', '/products/new', '/trendyol/limits', '/damaged-in', '/damaged-out', '/damaged-stock']
@@ -133,8 +136,8 @@ export default function AppShell({ children }: AppShellProps) {
                             <Warehouse className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                            <span className="font-bold text-xl tracking-tight">DepoPro</span>
-                            <p className="text-xs text-slate-400 -mt-0.5">Depo Yönetim Sistemi</p>
+                            <span className="font-bold text-xl tracking-tight">LiaBlancos</span>
+                            <p className="text-xs text-slate-400 -mt-0.5">Stok Yönetim Sistemi</p>
                         </div>
                     </div>
                 </div>
@@ -239,8 +242,21 @@ export default function AppShell({ children }: AppShellProps) {
                 </nav>
 
                 {/* Footer */}
-                <div className="p-4 border-t border-white/5">
-                    <div className="px-4 py-3 rounded-xl bg-white/5 text-center">
+                <div className="p-4 border-t border-white/5 space-y-3">
+                    {user && (
+                        <div className="px-4 py-3 rounded-xl bg-white/5">
+                            <p className="text-xs text-slate-400">Giriş yapan:</p>
+                            <p className="text-sm font-semibold text-white mt-0.5 truncate">{user.email}</p>
+                        </div>
+                    )}
+                    <button
+                        onClick={logout}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all text-sm font-medium"
+                    >
+                        <LogOut className="w-4 h-4" />
+                        Çıkış Yap
+                    </button>
+                    <div className="px-4 py-2 rounded-xl bg-white/5 text-center">
                         <p className="text-xs text-slate-500">Versiyon 2.0</p>
                         <p className="text-[10px] text-slate-600 mt-0.5">Premium Edition</p>
                     </div>
@@ -253,7 +269,7 @@ export default function AppShell({ children }: AppShellProps) {
                     <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md">
                         <Warehouse className="w-4 h-4 text-white" />
                     </div>
-                    <span className="font-bold text-lg text-zinc-900">DepoPro</span>
+                    <span className="font-bold text-lg text-zinc-900">LiaBlancos</span>
                 </div>
                 <button
                     onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -272,7 +288,7 @@ export default function AppShell({ children }: AppShellProps) {
                             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md">
                                 <Warehouse className="w-4 h-4 text-white" />
                             </div>
-                            <span className="font-bold text-lg text-white">DepoPro</span>
+                            <span className="font-bold text-lg text-white">LiaBlancos</span>
                         </div>
                         <button
                             onClick={() => setIsMobileMenuOpen(false)}
