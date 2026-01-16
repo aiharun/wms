@@ -1,4 +1,4 @@
-import { getTrendyolOrders } from '@/lib/actions'
+import { getExtendedTrendyolReturns } from '@/lib/actions'
 import { RotateCcw, AlertCircle, Package } from 'lucide-react'
 import ReturnsTable from '@/components/ReturnsTable'
 
@@ -13,8 +13,9 @@ export default async function ReturnsPage({ searchParams }: PageProps) {
     const page = parseInt(resolvedParams.page || '0')
     const pageSize = 50
 
-    // Fetch returned and undelivered orders
-    const result = await getTrendyolOrders(['Returned', 'UnDelivered'], page, pageSize)
+    // Fetch returned and undelivered orders (extended history)
+    const result = await getExtendedTrendyolReturns(page, pageSize)
+
 
     const orders = result.orders || []
     const error = result.error

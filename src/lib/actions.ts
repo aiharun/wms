@@ -477,7 +477,13 @@ export async function updateProductMinStock(productId: string, minStock: number)
         return { error: error.message || 'Kritik limit güncellenemedi.' }
     }
 }
-export async function getTrendyolOrders(status?: string | string[], page: number = 0, size: number = 50) {
+export async function getTrendyolOrders(
+    status?: string | string[],
+    page: number = 0,
+    size: number = 50,
+    startDate?: number,
+    endDate?: number
+) {
     // 1. Get credentials
     const settings = await getSettings()
     const sellerId = settings.find(s => s.key === 'trendyol_seller_id')?.value
@@ -493,6 +499,9 @@ export async function getTrendyolOrders(status?: string | string[], page: number
 
     try {
         let url = `https://api.trendyol.com/integration/order/sellers/${sellerId}/orders?page=${page}&size=${size}&orderByField=OrderDate&orderByDirection=DESC`
+
+        if (startDate) url += `&startDate=${startDate}`
+        if (endDate) url += `&endDate=${endDate}`
 
         if (status) {
             if (Array.isArray(status)) {
@@ -618,4 +627,54 @@ export async function getTrendyolClaims(page: number = 0, size: number = 50) {
         return { error: error.message || 'İade talepleri çekilemedi.' }
     }
 }
+
+export async function getExtendedTrendyolReturns(page: number = 0, size: number = 50) {
+    const statuses = ['Returned', 'UnDelivered']
+    let allOrders: any[] = []
+
+    // We'll fetch in 14-day chunks, going back ~3 months (6 chunks)
+    const CHUNK_SIZE_MS = 14 * 24 * 60 * 60 * 1000
+    const now = Date.now()
+
+    try {
+        // Run chunks in parallel for speed
+        const chunkPromises = [0, 1, 2, 3, 4, 5].map(chunkIdx => {
+            const endDate = now - (chunkIdx * CHUNK_SIZE_MS)
+            const startDate = endDate - CHUNK_SIZE_MS
+            return getTrendyolOrders(statuses, 0, 100, startDate, endDate)
+        })
+
+        const results = await Promise.all(chunkPromises)
+
+        results.forEach(res => {
+            if (res.success && res.orders) {
+                allOrders = [...allOrders, ...res.orders]
+            }
+        })
+
+        // De-duplicate by orderNumber
+        const uniqueOrders = Array.from(new Map(allOrders.map(o => [o.orderNumber, o])).values())
+
+        // Sort newest first
+        uniqueOrders.sort((a: any, b: any) => b.orderDate - a.orderDate)
+
+        // Manual pagination on the merged set
+        const totalElements = uniqueOrders.length
+        const totalPages = Math.ceil(totalElements / size)
+        const paginatedOrders = uniqueOrders.slice(page * size, (page + 1) * size)
+
+        return {
+            success: true,
+            orders: paginatedOrders,
+            totalElements,
+            totalPages,
+            page,
+            size
+        }
+    } catch (error: any) {
+        console.error('Extended returns error:', error)
+        return { error: 'Genişletilmiş iade verileri çekilemedi.' }
+    }
+}
+
 
