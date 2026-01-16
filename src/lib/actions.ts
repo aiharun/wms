@@ -625,29 +625,75 @@ export async function getTrendyolClaims(
         }
 
         const data = await response.json()
+
+        // Debug: Log first claim to see full structure
+        if (data.content && data.content.length > 0) {
+            console.log('[Trendyol Claims] Sample Claim Structure:', JSON.stringify(data.content[0], null, 2))
+        }
+
         return {
             success: true,
             claims: data.content || [],
             totalElements: data.totalElements || 0,
             totalPages: data.totalPages || 0
         }
+
     } catch (error: any) {
         console.error('Fetch Trendyol claims error:', error)
         return { error: error.message || 'İade talepleri çekilemedi.' }
     }
 }
 
+// Fetch available claim reasons (return reasons lookup table)
+export async function getClaimReasons() {
+    const settings = await getSettings()
+    const sellerId = settings.find(s => s.key === 'trendyol_seller_id')?.value
+    const apiKey = settings.find(s => s.key === 'trendyol_api_key')?.value
+    const apiSecret = settings.find(s => s.key === 'trendyol_api_secret')?.value
+
+    if (!sellerId || !apiKey || !apiSecret) {
+        return { error: 'Trendyol API bilgileri eksik.' }
+    }
+
+    const auth = Buffer.from(`${apiKey}:${apiSecret}`).toString('base64')
+
+    try {
+        const url = `https://api.trendyol.com/integration/claims/sellers/${sellerId}/claims/issue-reasons`
+
+        const response = await fetch(url, {
+            headers: {
+                'Authorization': `Basic ${auth}`,
+                'User-Agent': `${sellerId} - SelfIntegration`
+            }
+        })
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}))
+            throw new Error(errorData.message || `Trendyol Hatası (${response.status})`)
+        }
+
+        const data = await response.json()
+        console.log('[Trendyol] Claim Reasons:', JSON.stringify(data, null, 2))
+        return { success: true, reasons: data }
+    } catch (error: any) {
+        console.error('Fetch claim reasons error:', error)
+        return { error: error.message || 'İade sebepleri çekilemedi.' }
+    }
+}
+
+
 export async function getExtendedTrendyolReturns(page: number = 0, size: number = 50) {
     const statuses = ['Returned', 'UnDelivered', 'Cancelled']
     let allOrders: any[] = []
 
-    // Fetch in 14-day chunks, going back ~6 months (13 chunks)
+    // Fetch in 14-day chunks, going back ~1 year (26 chunks)
     const CHUNK_SIZE_MS = 14 * 24 * 60 * 60 * 1000
     const now = Date.now()
-    const chunkIndices = Array.from({ length: 13 }, (_, i) => i)
+    const chunkIndices = Array.from({ length: 26 }, (_, i) => i)
 
     try {
-        console.log(`[LiaBlancos] Starting Deep Scan (6 Months) for Returns & Claims...`)
+        console.log(`[LiaBlancos] Starting Deep Scan (1 Year) for Returns & Claims...`)
+
 
         // 1. Fetch Orders in chunks
         const orderResults = await Promise.all(chunkIndices.map(chunkIdx => {
