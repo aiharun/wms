@@ -637,8 +637,9 @@ export async function getExtendedTrendyolReturns(page: number = 0, size: number 
     const now = Date.now()
 
     try {
-        // Run chunks in parallel for speed
-        const chunkPromises = [0, 1, 2, 3, 4, 5].map(chunkIdx => {
+        // Run chunks in parallel for speed - Increasing to 12 chunks (~6 months)
+        const chunkPromises = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(chunkIdx => {
+
             const endDate = now - (chunkIdx * CHUNK_SIZE_MS)
             const startDate = endDate - CHUNK_SIZE_MS
             return getTrendyolOrders(statuses, 0, 100, startDate, endDate)
