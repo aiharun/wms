@@ -681,8 +681,10 @@ export async function getExtendedTrendyolReturns(page: number = 0, size: number 
                     customerFirstName: c.customerFirstName,
                     customerLastName: c.customerLastName,
                     totalPrice: c.totalPrice,
+                    claimReasonName: c.items?.[0]?.claimReasonName || c.claimReasonName,
                     lines: c.items || []
                 }))
+
                 allOrders = [...allOrders, ...unifiedClaims]
             }
         })
