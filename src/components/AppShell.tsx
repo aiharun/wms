@@ -265,8 +265,24 @@ export default function AppShell({ children }: AppShellProps) {
 
             {/* Mobile Drawer - Premium */}
             {isMobileMenuOpen && (
-                <div className="md:hidden fixed inset-0 z-50 bg-slate-900 pt-20 px-4 animate-fade-in overflow-y-auto">
-                    <nav className="space-y-2 pb-20">
+                <div className="md:hidden fixed inset-0 z-50 bg-slate-900 animate-fade-in overflow-y-auto">
+                    {/* Drawer Header with Close Button */}
+                    <div className="bg-slate-900 border-b border-white/5 p-4 sticky top-0 z-50 flex justify-between items-center">
+                        <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-md">
+                                <Warehouse className="w-4 h-4 text-white" />
+                            </div>
+                            <span className="font-bold text-lg text-white">DepoPro</span>
+                        </div>
+                        <button
+                            onClick={() => setIsMobileMenuOpen(false)}
+                            className="p-2 rounded-lg hover:bg-white/5 transition-colors"
+                        >
+                            <X className="text-slate-400 w-6 h-6" />
+                        </button>
+                    </div>
+
+                    <nav className="space-y-2 p-4 pb-20">
                         {mainNavigation.map((item) => (
                             <Link
                                 key={item.name}
