@@ -169,7 +169,7 @@ export default function AppShell({ children }: AppShellProps) {
                             "grid transition-all duration-300 ease-in-out",
                             isStockOpen ? "grid-rows-[1fr] opacity-100 mt-1" : "grid-rows-[0fr] opacity-0 overflow-hidden"
                         )}>
-                            <div className="overflow-hidden space-y-1">
+                            <div className="overflow-y-auto max-h-[40vh] space-y-1 custom-scrollbar">
                                 {stockNavigation.map((item) => <NavLink key={item.name} item={item} isSubItem />)}
                             </div>
                         </div>
@@ -198,7 +198,7 @@ export default function AppShell({ children }: AppShellProps) {
                             "grid transition-all duration-300 ease-in-out",
                             isShippingOpen ? "grid-rows-[1fr] opacity-100 mt-1" : "grid-rows-[0fr] opacity-0 overflow-hidden"
                         )}>
-                            <div className="overflow-hidden space-y-1">
+                            <div className="overflow-y-auto max-h-[40vh] space-y-1 custom-scrollbar">
                                 {shippingNavigation.map((item) => <NavLink key={item.name} item={item} isSubItem />)}
                             </div>
                         </div>
@@ -227,7 +227,7 @@ export default function AppShell({ children }: AppShellProps) {
                             "grid transition-all duration-300 ease-in-out",
                             isCalcOpen ? "grid-rows-[1fr] opacity-100 mt-1" : "grid-rows-[0fr] opacity-0 overflow-hidden"
                         )}>
-                            <div className="overflow-hidden space-y-1">
+                            <div className="overflow-y-auto max-h-[40vh] space-y-1 custom-scrollbar">
                                 {calculationNavigation.map((item) => <NavLink key={item.name} item={item} isSubItem />)}
                             </div>
                         </div>
@@ -339,7 +339,7 @@ export default function AppShell({ children }: AppShellProps) {
                                 "grid transition-all duration-300 ease-in-out",
                                 isStockOpen ? "grid-rows-[1fr] opacity-100 mt-2" : "grid-rows-[0fr] opacity-0 overflow-hidden"
                             )}>
-                                <div className="overflow-hidden space-y-2">
+                                <div className="overflow-y-auto max-h-[50vh] space-y-2 custom-scrollbar">
                                     {stockNavigation.map((item) => (
                                         <Link
                                             key={item.name}
@@ -383,7 +383,7 @@ export default function AppShell({ children }: AppShellProps) {
                                 "grid transition-all duration-300 ease-in-out",
                                 isShippingOpen ? "grid-rows-[1fr] opacity-100 mt-2" : "grid-rows-[0fr] opacity-0 overflow-hidden"
                             )}>
-                                <div className="overflow-hidden space-y-2">
+                                <div className="overflow-y-auto max-h-[50vh] space-y-2 custom-scrollbar">
                                     {shippingNavigation.map((item) => (
                                         <Link
                                             key={item.name}
@@ -427,7 +427,7 @@ export default function AppShell({ children }: AppShellProps) {
                                 "grid transition-all duration-300 ease-in-out",
                                 isCalcOpen ? "grid-rows-[1fr] opacity-100 mt-2" : "grid-rows-[0fr] opacity-0 overflow-hidden"
                             )}>
-                                <div className="overflow-hidden space-y-2">
+                                <div className="overflow-y-auto max-h-[50vh] space-y-2 custom-scrollbar">
                                     {calculationNavigation.map((item) => (
                                         <Link
                                             key={item.name}
