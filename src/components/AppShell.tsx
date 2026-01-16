@@ -128,7 +128,7 @@ export default function AppShell({ children }: AppShellProps) {
     return (
         <div className="min-h-screen bg-zinc-50 flex flex-col md:flex-row">
             {/* Desktop Sidebar - Premium Glass Effect */}
-            <aside className="hidden md:flex flex-col w-72 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white min-h-screen fixed left-0 top-0 z-30">
+            <aside className="hidden md:flex flex-col w-72 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white h-screen fixed left-0 top-0 z-30">
                 {/* Logo Area */}
                 <div className="p-6 border-b border-white/10">
                     <div className="flex items-center gap-3">
@@ -281,7 +281,7 @@ export default function AppShell({ children }: AppShellProps) {
 
             {/* Mobile Drawer - Premium */}
             {isMobileMenuOpen && (
-                <div className="md:hidden fixed inset-0 z-50 bg-slate-900 animate-fade-in overflow-y-auto">
+                <div className="md:hidden fixed inset-0 z-50 bg-slate-900 animate-fade-in flex flex-col">
                     {/* Drawer Header with Close Button */}
                     <div className="bg-slate-900 border-b border-white/5 p-4 sticky top-0 z-50 flex justify-between items-center">
                         <div className="flex items-center gap-3">
@@ -298,7 +298,7 @@ export default function AppShell({ children }: AppShellProps) {
                         </button>
                     </div>
 
-                    <nav className="space-y-2 p-4 pb-20 overflow-y-auto custom-scrollbar" style={{ maxHeight: 'calc(100vh - 80px)' }}>
+                    <nav className="flex-1 space-y-2 p-4 pb-20 overflow-y-auto custom-scrollbar">
                         {mainNavigation.map((item) => (
                             <Link
                                 key={item.name}
