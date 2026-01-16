@@ -152,20 +152,24 @@ export default function ReturnsTable({
 
                                 // Priority: 
                                 // 1. Customer Note (Orders API)
-                                // 2. Specific Claim Reason (Claims API)
-                                // 3. Customer Return Reason String
-                                // 4. Line-level status name
-                                // 5. Latest history description
+                                // 2. Extracted Return Reason (from lines/history)
+                                // 3. Specific Claim Reason (Claims API)
+                                // 4. Customer Return Reason String
+                                // 5. Line-level status name
+                                // 6. Latest history description
                                 const returnReason =
                                     order.customerNote ||
+                                    order.extractedReturnReason ||
                                     order.claimReason?.name ||
                                     order.claimReasonName ||
                                     order.customerReturnReason ||
+                                    firstLine?.returnReasonName ||
                                     firstLine?.statusName ||
                                     latestHistoryDesc ||
                                     (order.status === 'Returned' ? 'İade Edildi' :
                                         order.status === 'UnDelivered' ? 'Teslim Edilemedi' :
                                             order.status === 'Cancelled' ? 'İptal Edildi' : 'Genel İade/İptal')
+
 
 
                                 return (

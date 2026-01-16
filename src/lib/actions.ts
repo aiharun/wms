@@ -532,7 +532,13 @@ export async function getTrendyolOrders(
         const data = await response.json()
         let orders = data.content || []
 
+        // Debug: Log first order to see full structure for return reasons
+        if (orders.length > 0 && (status?.includes('Returned') || status?.includes('UnDelivered'))) {
+            console.log('[Trendyol Orders] Sample Order Structure:', JSON.stringify(orders[0], null, 2))
+        }
+
         console.log(`[Trendyol API] Success: Received ${orders.length} orders for chunk.`)
+
 
 
         return {
@@ -702,44 +708,54 @@ export async function getExtendedTrendyolReturns(page: number = 0, size: number 
             return getTrendyolOrders(statuses, 0, 100, startDate, endDate)
         }))
 
-        // 2. Fetch Claims in chunks (Returns specifically)
-        const claimResults = await Promise.all(chunkIndices.map(chunkIdx => {
-            const endDate = now - (chunkIdx * CHUNK_SIZE_MS)
-            const startDate = endDate - CHUNK_SIZE_MS
-            return getTrendyolClaims(0, 100, startDate, endDate)
-        }))
+        // NOTE: Claims API disabled temporarily - returning "Service Unavailable"
+        // TODO: Re-enable when Trendyol Claims API access is restored
+        // const claimResults = await Promise.all(chunkIndices.map(chunkIdx => {
+        //     const endDate = now - (chunkIdx * CHUNK_SIZE_MS)
+        //     const startDate = endDate - CHUNK_SIZE_MS
+        //     return getTrendyolClaims(0, 100, startDate, endDate)
+        // }))
 
-        // Process Orders
+        // Process Orders - Extract return reason from lines
         orderResults.forEach(res => {
             if (res.success && res.orders) {
-                allOrders = [...allOrders, ...res.orders]
-            }
-        })
-
-        // Process Claims & Unify format
-        claimResults.forEach(res => {
-            if (res.success && res.claims) {
-                const unifiedClaims = res.claims.map((c: any) => ({
-                    ...c,
-                    orderNumber: c.orderNumber,
-                    orderDate: c.claimDate,
-                    status: 'Returned',
-                    customerFirstName: c.customerFirstName,
-                    customerLastName: c.customerLastName,
-                    totalPrice: c.totalPrice,
-                    // Trendyol Claims API structure: items[0].claimReason.name
-                    claimReasonName: c.items?.[0]?.claimReason?.name || c.claimReasonName || c.claimReason?.name,
-                    lines: c.items?.map((item: any) => ({
-                        ...item,
-                        productName: item.productName || item.productTitle,
-                        quantity: item.quantity || 1
-                    })) || []
+                // Map orders to include extracted return reasons from lines
+                const ordersWithReasons = res.orders.map((order: any) => ({
+                    ...order,
+                    // Try to get return reason from multiple possible fields
+                    extractedReturnReason:
+                        order.lines?.[0]?.returnReasonName ||
+                        order.lines?.[0]?.statusName ||
+                        order.shipmentPackages?.[0]?.packageHistory?.slice(-1)[0]?.description ||
+                        null
                 }))
-
-
-                allOrders = [...allOrders, ...unifiedClaims]
+                allOrders = [...allOrders, ...ordersWithReasons]
             }
         })
+
+
+        // NOTE: Claims processing disabled - API returning "Service Unavailable"
+        // claimResults.forEach(res => {
+        //     if (res.success && res.claims) {
+        //         const unifiedClaims = res.claims.map((c: any) => ({
+        //             ...c,
+        //             orderNumber: c.orderNumber,
+        //             orderDate: c.claimDate,
+        //             status: 'Returned',
+        //             customerFirstName: c.customerFirstName,
+        //             customerLastName: c.customerLastName,
+        //             totalPrice: c.totalPrice,
+        //             claimReasonName: c.items?.[0]?.claimReason?.name || c.claimReasonName || c.claimReason?.name,
+        //             lines: c.items?.map((item: any) => ({
+        //                 ...item,
+        //                 productName: item.productName || item.productTitle,
+        //                 quantity: item.quantity || 1
+        //             })) || []
+        //         }))
+        //         allOrders = [...allOrders, ...unifiedClaims]
+        //     }
+        // })
+
 
         // De-duplicate by orderNumber
         const uniqueOrders = Array.from(new Map(allOrders.map(o => [o.orderNumber, o])).values())
