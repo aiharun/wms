@@ -515,6 +515,7 @@ export async function getTrendyolOrders(
         }
 
 
+        console.log(`[Trendyol API] Fetching: ${url}`)
         const response = await fetch(url, {
             headers: {
                 'Authorization': `Basic ${auth}`,
@@ -524,18 +525,15 @@ export async function getTrendyolOrders(
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}))
+            console.error(`[Trendyol API Error] ${response.status}:`, errorData)
             throw new Error(errorData.message || `Trendyol Hatası (${response.status})`)
         }
 
         const data = await response.json()
         let orders = data.content || []
 
-        // Manual sort fallback: Newest first based on orderDate
-        orders = orders.sort((a: any, b: any) => {
-            const dateA = new Date(a.orderDate).getTime()
-            const dateB = new Date(b.orderDate).getTime()
-            return dateB - dateA
-        })
+        console.log(`[Trendyol API] Success: Received ${orders.length} orders for chunk.`)
+
 
         return {
             success: true,
@@ -649,17 +647,38 @@ export async function getExtendedTrendyolReturns(page: number = 0, size: number 
 
         const results = await Promise.all(chunkPromises)
 
+        // Also fetch first page of claims (returns specifically)
+        const claimsResult = await getTrendyolClaims(0, 50)
+        const claimOrders = (claimsResult.claims || []).map((c: any) => ({
+            ...c,
+            orderNumber: c.orderNumber,
+            orderDate: c.claimDate,
+            status: 'Returned',
+            customerFirstName: c.customerFirstName,
+            customerLastName: c.customerLastName,
+            totalPrice: c.totalPrice,
+            lines: c.items || []
+        }))
+
         results.forEach(res => {
             if (res.success && res.orders) {
                 allOrders = [...allOrders, ...res.orders]
             }
         })
 
+        allOrders = [...allOrders, ...claimOrders]
+
+
         // De-duplicate by orderNumber
         const uniqueOrders = Array.from(new Map(allOrders.map(o => [o.orderNumber, o])).values())
 
-        // Sort newest first
-        uniqueOrders.sort((a: any, b: any) => b.orderDate - a.orderDate)
+        // Sort newest first - Use orderDate (timestamp or ISO string)
+        uniqueOrders.sort((a: any, b: any) => {
+            const dateA = typeof a.orderDate === 'number' ? a.orderDate : new Date(a.orderDate).getTime()
+            const dateB = typeof b.orderDate === 'number' ? b.orderDate : new Date(b.orderDate).getTime()
+            return dateB - dateA
+        })
+
 
         // Manual pagination on the merged set
         const totalElements = uniqueOrders.length
