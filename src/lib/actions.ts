@@ -629,17 +629,19 @@ export async function getTrendyolClaims(page: number = 0, size: number = 50) {
 }
 
 export async function getExtendedTrendyolReturns(page: number = 0, size: number = 50) {
-    const statuses = ['Returned', 'UnDelivered']
+    const statuses = ['Returned', 'UnDelivered', 'Cancelled']
     let allOrders: any[] = []
 
-    // We'll fetch in 14-day chunks, going back ~3 months (6 chunks)
+    // We'll fetch in 14-day chunks, going back ~1 year (26 chunks)
     const CHUNK_SIZE_MS = 14 * 24 * 60 * 60 * 1000
     const now = Date.now()
 
     try {
-        // Run chunks in parallel for speed - Increasing to 12 chunks (~6 months)
-        const chunkPromises = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(chunkIdx => {
+        // Prepare 26 chunks for a full year of history
+        const chunkIndices = Array.from({ length: 26 }, (_, i) => i)
 
+        // Run chunks in parallel for speed
+        const chunkPromises = chunkIndices.map(chunkIdx => {
             const endDate = now - (chunkIdx * CHUNK_SIZE_MS)
             const startDate = endDate - CHUNK_SIZE_MS
             return getTrendyolOrders(statuses, 0, 100, startDate, endDate)
