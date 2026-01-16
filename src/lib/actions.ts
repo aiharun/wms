@@ -585,7 +585,12 @@ export async function getTrendyolOrderDetail(orderNumber: string) {
     }
 }
 
-export async function getTrendyolClaims(page: number = 0, size: number = 50) {
+export async function getTrendyolClaims(
+    page: number = 0,
+    size: number = 50,
+    startDate?: number,
+    endDate?: number
+) {
     const settings = await getSettings()
     const sellerId = settings.find(s => s.key === 'trendyol_seller_id')?.value
     const apiKey = settings.find(s => s.key === 'trendyol_api_key')?.value
@@ -599,7 +604,13 @@ export async function getTrendyolClaims(page: number = 0, size: number = 50) {
 
     try {
         // Fetch claims (returns)
-        const url = `https://api.trendyol.com/integration/claims/sellers/${sellerId}/claims?page=${page}&size=${size}`
+        let url = `https://api.trendyol.com/integration/claims/sellers/${sellerId}/claims?page=${page}&size=${size}`
+
+        if (startDate) url += `&startDate=${startDate}`
+        if (endDate) url += `&endDate=${endDate}`
+
+        console.log(`[Trendyol Claims] Fetching: ${url}`)
+
 
         const response = await fetch(url, {
             headers: {
@@ -630,60 +641,67 @@ export async function getExtendedTrendyolReturns(page: number = 0, size: number 
     const statuses = ['Returned', 'UnDelivered', 'Cancelled']
     let allOrders: any[] = []
 
-    // We'll fetch in 14-day chunks, going back ~1 year (26 chunks)
+    // Fetch in 14-day chunks, going back ~6 months (13 chunks)
     const CHUNK_SIZE_MS = 14 * 24 * 60 * 60 * 1000
     const now = Date.now()
+    const chunkIndices = Array.from({ length: 13 }, (_, i) => i)
 
     try {
-        // Prepare 26 chunks for a full year of history
-        const chunkIndices = Array.from({ length: 26 }, (_, i) => i)
+        console.log(`[LiaBlancos] Starting Deep Scan (6 Months) for Returns & Claims...`)
 
-        // Run chunks in parallel for speed
-        const chunkPromises = chunkIndices.map(chunkIdx => {
+        // 1. Fetch Orders in chunks
+        const orderResults = await Promise.all(chunkIndices.map(chunkIdx => {
             const endDate = now - (chunkIdx * CHUNK_SIZE_MS)
             const startDate = endDate - CHUNK_SIZE_MS
             return getTrendyolOrders(statuses, 0, 100, startDate, endDate)
-        })
-
-        const results = await Promise.all(chunkPromises)
-
-        // Also fetch first page of claims (returns specifically)
-        const claimsResult = await getTrendyolClaims(0, 50)
-        const claimOrders = (claimsResult.claims || []).map((c: any) => ({
-            ...c,
-            orderNumber: c.orderNumber,
-            orderDate: c.claimDate,
-            status: 'Returned',
-            customerFirstName: c.customerFirstName,
-            customerLastName: c.customerLastName,
-            totalPrice: c.totalPrice,
-            lines: c.items || []
         }))
 
-        results.forEach(res => {
+        // 2. Fetch Claims in chunks (Returns specifically)
+        const claimResults = await Promise.all(chunkIndices.map(chunkIdx => {
+            const endDate = now - (chunkIdx * CHUNK_SIZE_MS)
+            const startDate = endDate - CHUNK_SIZE_MS
+            return getTrendyolClaims(0, 100, startDate, endDate)
+        }))
+
+        // Process Orders
+        orderResults.forEach(res => {
             if (res.success && res.orders) {
                 allOrders = [...allOrders, ...res.orders]
             }
         })
 
-        allOrders = [...allOrders, ...claimOrders]
-
+        // Process Claims & Unify format
+        claimResults.forEach(res => {
+            if (res.success && res.claims) {
+                const unifiedClaims = res.claims.map((c: any) => ({
+                    ...c,
+                    orderNumber: c.orderNumber,
+                    orderDate: c.claimDate,
+                    status: 'Returned',
+                    customerFirstName: c.customerFirstName,
+                    customerLastName: c.customerLastName,
+                    totalPrice: c.totalPrice,
+                    lines: c.items || []
+                }))
+                allOrders = [...allOrders, ...unifiedClaims]
+            }
+        })
 
         // De-duplicate by orderNumber
         const uniqueOrders = Array.from(new Map(allOrders.map(o => [o.orderNumber, o])).values())
 
-        // Sort newest first - Use orderDate (timestamp or ISO string)
+        // Sort newest first
         uniqueOrders.sort((a: any, b: any) => {
             const dateA = typeof a.orderDate === 'number' ? a.orderDate : new Date(a.orderDate).getTime()
             const dateB = typeof b.orderDate === 'number' ? b.orderDate : new Date(b.orderDate).getTime()
             return dateB - dateA
         })
 
-
-        // Manual pagination on the merged set
         const totalElements = uniqueOrders.length
         const totalPages = Math.ceil(totalElements / size)
         const paginatedOrders = uniqueOrders.slice(page * size, (page + 1) * size)
+
+        console.log(`[LiaBlancos] Deep Scan Complete. Found ${totalElements} unique records.`)
 
         return {
             success: true,
@@ -698,5 +716,3 @@ export async function getExtendedTrendyolReturns(page: number = 0, size: number 
         return { error: 'Genişletilmiş iade verileri çekilemedi.' }
     }
 }
-
-

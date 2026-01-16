@@ -151,15 +151,20 @@ export default function ReturnsTable({
                                 const latestHistoryDesc = history[history.length - 1]?.description
 
                                 // Priority: 
-                                // 1. Customer Note (Direct)
-                                // 2. Line-level status name (Commonly contains "İade Edildi - [Sebep]")
-                                // 3. Latest history description (if detail was fetched)
-                                // 4. Order status fallback
+                                // 1. Customer Note (Orders API)
+                                // 2. Claim Reason (Claims API)
+                                // 3. Line-level status name
+                                // 4. Latest history description
+                                // 5. Order status fallback
                                 const returnReason =
                                     order.customerNote ||
+                                    order.claimReason?.name ||
                                     firstLine?.statusName ||
                                     latestHistoryDesc ||
-                                    (order.status === 'Returned' ? 'İade Edildi' : 'Teslim Edilemedi')
+                                    (order.status === 'Returned' ? 'İade Edildi' :
+                                        order.status === 'UnDelivered' ? 'Teslim Edilemedi' :
+                                            order.status === 'Cancelled' ? 'İptal Edildi' : 'Genel İade/İptal')
+
 
                                 return (
                                     <tr key={order.orderNumber} className="hover:bg-zinc-50/30 transition-colors group">
