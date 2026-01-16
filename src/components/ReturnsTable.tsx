@@ -150,25 +150,44 @@ export default function ReturnsTable({
                                 const history = order.shipmentPackages?.[0]?.packageHistory || []
                                 const latestHistoryDesc = history[history.length - 1]?.description
 
+                                // Turkish translation for Trendyol status codes
+                                const translateStatus = (status: string) => {
+                                    const translations: Record<string, string> = {
+                                        'UnDeliveredAndReturned': 'Teslim Edilemedi ve İade',
+                                        'Returned': 'Müşteri İadesi',
+                                        'UnDelivered': 'Teslim Edilemedi',
+                                        'Cancelled': 'İptal Edildi',
+                                        'ReturnAccepted': 'İade Kabul Edildi',
+                                        'ReturnRejected': 'İade Reddedildi'
+                                    }
+                                    return translations[status] || status
+                                }
+
                                 // Priority: 
                                 // 1. Customer Note (Orders API)
                                 // 2. Extracted Return Reason (from lines/history)
                                 // 3. Specific Claim Reason (Claims API)
-                                // 4. Customer Return Reason String
+                                // 4. Order Line Item Status Name (translated)
                                 // 5. Line-level status name
                                 // 6. Latest history description
-                                const returnReason =
+                                const rawReason =
                                     order.customerNote ||
                                     order.extractedReturnReason ||
                                     order.claimReason?.name ||
                                     order.claimReasonName ||
                                     order.customerReturnReason ||
                                     firstLine?.returnReasonName ||
+                                    firstLine?.orderLineItemStatusName ||
                                     firstLine?.statusName ||
                                     latestHistoryDesc ||
+                                    order.shipmentPackageStatus ||
+                                    order.status
+
+                                const returnReason = translateStatus(rawReason) ||
                                     (order.status === 'Returned' ? 'İade Edildi' :
                                         order.status === 'UnDelivered' ? 'Teslim Edilemedi' :
                                             order.status === 'Cancelled' ? 'İptal Edildi' : 'Genel İade/İptal')
+
 
 
 
