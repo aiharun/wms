@@ -328,6 +328,94 @@ export default function AppShell({ children }: AppShellProps) {
                             </div>
                         </div>
 
+                        {/* Mobile Shipping Group */}
+                        <div className="pt-2">
+                            <button
+                                onClick={() => setIsShippingOpen(!isShippingOpen)}
+                                className={cn(
+                                    "flex items-center justify-between w-full px-6 py-4 rounded-2xl transition-all",
+                                    isCurrentlyOnShippingPage ? "text-white" : "text-slate-400"
+                                )}
+                            >
+                                <div className="flex items-center gap-4">
+                                    <ShoppingBag className="w-6 h-6" />
+                                    <span className="font-black uppercase tracking-widest text-sm">Kargo İşlemleri</span>
+                                </div>
+                                <ChevronDown className={cn(
+                                    "w-5 h-5 transition-transform duration-300",
+                                    isShippingOpen ? "rotate-0" : "-rotate-90"
+                                )} />
+                            </button>
+
+                            <div className={cn(
+                                "grid transition-all duration-300 ease-in-out",
+                                isShippingOpen ? "grid-rows-[1fr] opacity-100 mt-2" : "grid-rows-[0fr] opacity-0 overflow-hidden"
+                            )}>
+                                <div className="overflow-hidden space-y-2">
+                                    {shippingNavigation.map((item) => (
+                                        <Link
+                                            key={item.name}
+                                            href={item.href}
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                            className={cn(
+                                                "flex items-center gap-4 ml-8 px-6 py-4 rounded-2xl transition-all",
+                                                pathname === item.href
+                                                    ? "bg-white/10 text-white"
+                                                    : "text-slate-400 hover:bg-white/5"
+                                            )}
+                                        >
+                                            <item.icon className="w-5 h-5" />
+                                            <span className="font-medium">{item.name}</span>
+                                        </Link>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Mobile Calculation Group */}
+                        <div className="pt-2">
+                            <button
+                                onClick={() => setIsCalcOpen(!isCalcOpen)}
+                                className={cn(
+                                    "flex items-center justify-between w-full px-6 py-4 rounded-2xl transition-all",
+                                    pathname.startsWith('/calculator') ? "text-white" : "text-slate-400"
+                                )}
+                            >
+                                <div className="flex items-center gap-4">
+                                    <Calculator className="w-6 h-6" />
+                                    <span className="font-black uppercase tracking-widest text-sm">Hesaplama</span>
+                                </div>
+                                <ChevronDown className={cn(
+                                    "w-5 h-5 transition-transform duration-300",
+                                    isCalcOpen ? "rotate-0" : "-rotate-90"
+                                )} />
+                            </button>
+
+                            <div className={cn(
+                                "grid transition-all duration-300 ease-in-out",
+                                isCalcOpen ? "grid-rows-[1fr] opacity-100 mt-2" : "grid-rows-[0fr] opacity-0 overflow-hidden"
+                            )}>
+                                <div className="overflow-hidden space-y-2">
+                                    {calculationNavigation.map((item) => (
+                                        <Link
+                                            key={item.name}
+                                            href={item.href}
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                            className={cn(
+                                                "flex items-center gap-4 ml-8 px-6 py-4 rounded-2xl transition-all",
+                                                pathname === item.href
+                                                    ? "bg-white/10 text-white"
+                                                    : "text-slate-400 hover:bg-white/5"
+                                            )}
+                                        >
+                                            <item.icon className="w-5 h-5" />
+                                            <span className="font-medium">{item.name}</span>
+                                        </Link>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="pt-6 border-t border-white/5">
                             {otherNavigation.map((item) => (
                                 <Link
