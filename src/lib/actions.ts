@@ -681,9 +681,15 @@ export async function getExtendedTrendyolReturns(page: number = 0, size: number 
                     customerFirstName: c.customerFirstName,
                     customerLastName: c.customerLastName,
                     totalPrice: c.totalPrice,
-                    claimReasonName: c.items?.[0]?.claimReasonName || c.claimReasonName,
-                    lines: c.items || []
+                    // Trendyol Claims API structure: items[0].claimReason.name
+                    claimReasonName: c.items?.[0]?.claimReason?.name || c.claimReasonName || c.claimReason?.name,
+                    lines: c.items?.map((item: any) => ({
+                        ...item,
+                        productName: item.productName || item.productTitle,
+                        quantity: item.quantity || 1
+                    })) || []
                 }))
+
 
                 allOrders = [...allOrders, ...unifiedClaims]
             }
