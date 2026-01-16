@@ -1,36 +1,44 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LiaBlancos - Stok Yönetim Sistemi 💎
 
-## Getting Started
+LiaBlancos, Trendyol satıcıları için özel olarak tasarlanmış, premium tasarımlı ve yüksek güvenlikli bir stok yönetim panelidir.
 
-First, run the development server:
+## 🚀 Özellikler
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **📦 Stok Takibi:** Ürünlerinizi, varyasyonlarını ve stok durumlarını anlık olarak takip edin.
+- **🏷️ Raf Yönetimi:** Deponuzdaki rafları tanımlayın ve ürünleri konumlarına göre organize edin.
+- **🔐 Güvenli Kimlik Doğrulama:** Supabase Auth entegrasyonu ile email tabanlı güvenli giriş.
+- **📊 Kâr Hesaplayıcı:** Trendyol komisyonları, kargo ve Stopaj (%1) dahil gelişmiş kâr analiz aracı.
+- **📱 Mobil Uyumlu:** Hareket halindeyken stoklarınızı kontrol edebileceğiniz tam uyumlu mobil arayüz.
+- **🔗 Trendyol Entegrasyonu:** Ürünleri Trendyol mağazanızdan otomatik senkronize edin (Geliştirme aşamasında).
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠️ Teknolojiler
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Frontend:** Next.js 15, React 19, Tailwind CSS 4
+- **Backend/DB:** Supabase (PostgreSQL)
+- **Güvenlik:** Supabase Auth (Email/Password)
+- **Icons:** Lucide React
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🏁 Başlangıç
 
-## Learn More
+1. Bağımlılıkları yükleyin:
+   ```bash
+   npm install
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+2. `.env.local` dosyasını oluşturun ve Supabase bilgilerinizi ekleyin:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. Geliştirme sunucusunu başlatın:
+   ```bash
+   npm run dev
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🔐 Güvenlik Notu
 
-## Deploy on Vercel
+Bu proje, kimlik doğrulama için **Supabase Auth** kullanır. Kullanıcı yönetimi doğrudan Supabase Dashboard üzerinden yapılabilir. Asla `.env.local` dosyasını GitHub'a pushlamayın!
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+© 2025 LiaBlancos • Premium Edition
