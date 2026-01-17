@@ -467,8 +467,29 @@ export default function AppShell({ children }: AppShellProps) {
                             ))}
                         </div>
                     </nav>
+
+                    {/* Mobile Footer with User & Logout */}
+                    <div className="p-4 border-t border-white/5 space-y-3 mt-auto">
+                        {user && (
+                            <div className="px-6 py-4 rounded-2xl bg-white/5">
+                                <p className="text-xs text-slate-400">Giriş yapan:</p>
+                                <p className="text-sm font-semibold text-white mt-0.5 truncate">{user.email}</p>
+                            </div>
+                        )}
+                        <button
+                            onClick={() => {
+                                setIsMobileMenuOpen(false)
+                                logout()
+                            }}
+                            className="w-full flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all text-base font-medium"
+                        >
+                            <LogOut className="w-5 h-5" />
+                            Çıkış Yap
+                        </button>
+                    </div>
                 </div>
             )}
+
 
             <main className="flex-1 md:ml-72 min-h-screen">
                 <div className="max-w-7xl mx-auto p-4 md:p-8 animate-fade">
